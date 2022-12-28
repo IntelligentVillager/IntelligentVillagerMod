@@ -169,6 +169,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     public static class CustomEntity extends NPCVillagerBaseEntity {
 
+        // TODO: Rename the entity to NPCVillagerEntity
+
         private PlayerEntity isTalkingToPlayer = null;
         private String customSkin = "villager_0";
 
@@ -185,6 +187,9 @@ public class NPCVillager extends NPCModElement.ModElement {
 
 
             setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
+
+            // TODO: Name and personal background should be generated from GPT3 API instead of
+            //  setting it manually
             setCustomName(ITextComponent.nullToEmpty("Jobbs"));
 //            setCustomName(new StringTextComponent(Utils.RandomNameGenerator.generateName()));
             setCustomNameVisible(true);
@@ -203,10 +208,20 @@ public class NPCVillager extends NPCModElement.ModElement {
         protected void registerGoals() {
             super.registerGoals();
 
+
+            // TODO: Villager could hear other villagers talking when they are close (Using
+            //  NPCVillagerManager) and reply
+
+            // TODO: Villagers need to add a goal to talk to each other, randomly go to the nearby villagers to chat
+
+            // TODO: Players can only receive messages from villagers chatting with each other if they are close to the villagers they are talking to
+
             this.goalSelector.addGoal(2, new NPCVillagerTalkGoal(this));
             this.goalSelector.addGoal(1, new NPCVillagerLookRandomlyGoal(this));
             this.goalSelector.addGoal(6, new NPCVillagerWalkingGoal(this, 1.0f));
         }
+
+        // TODO: Play sound when villager talk
 
         @Override
         public net.minecraft.util.SoundEvent getHurtSound(DamageSource ds) {

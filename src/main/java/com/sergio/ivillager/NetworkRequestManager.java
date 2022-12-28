@@ -17,6 +17,11 @@ import com.sergio.ivillager.Utils.JsonConverter;
 
 public class NetworkRequestManager {
 
+
+    // TODO: create Node API integration
+    // TODO: set prompt API integration
+    // TODO: GPT3 API integration
+
     public enum URLs {
         AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
         ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),

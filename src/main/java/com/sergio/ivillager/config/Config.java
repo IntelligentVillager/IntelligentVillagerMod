@@ -3,6 +3,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 
 public class Config {
+
+    //TODO: The config file needs to be read locally and stored persistently, including ssotoken and expiration time judgment, accesstoken and accesskey storage and judgment, worldview background information and all villager entities and their character information
     public static ForgeConfigSpec COMMON_CONFIG;
     public static ForgeConfigSpec.IntValue VALUE;
 

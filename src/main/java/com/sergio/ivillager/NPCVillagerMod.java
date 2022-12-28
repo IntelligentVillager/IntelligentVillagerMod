@@ -93,6 +93,10 @@ public class NPCVillagerMod {
         @SubscribeEvent
         public void serverLoad(FMLServerStartingEvent event) throws Exception {
             LOGGER.warn("serverLoad");
+
+            // TODO: email and password read from config file
+            // TODO: server integration debugging (last step)
+
             String ssotoken = NetworkRequestManager.getAuthToken("***REMOVED***", "***REMOVED***");
             LOGGER.warn(String.format("SSO TOKEN:%s", ssotoken));
             NPCVillagerManager.getInstance().setSsoToken(ssotoken);

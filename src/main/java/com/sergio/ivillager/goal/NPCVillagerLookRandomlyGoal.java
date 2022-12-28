@@ -16,6 +16,9 @@ public class NPCVillagerLookRandomlyGoal extends Goal {
     }
 
     public boolean canUse() {
+
+        // TODO: Villager could look randomly when player is typing
+
         if (this.mob.getIsTalkingToPlayer() != null) {
             return false;
         }
