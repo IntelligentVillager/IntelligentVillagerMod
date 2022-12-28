@@ -1,5 +1,6 @@
 package com.sergio.ivillager.renderer;
 
+import com.sergio.ivillager.Utils;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.HeadLayer;
@@ -39,8 +40,8 @@ public class NPCVillagerRenderer extends MobRenderer<CustomEntity, PlayerModel<C
     public ResourceLocation getTextureLocation(CustomEntity p_110775_1_) {
     // TODO: ADD emoji layer
 
-        this.customLayerRenderer.setTexture(new ResourceLocation("intelligentvillager:textures/entities" +
-                "/sss.png"));
+        this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(
+                "textures/entities", "sss.png")));
 
 //        if (NPCVillagerManager.getInstance().isVillagerTalkingtoPlayer(p_110775_1_.getId())) {
 //            LOGGER.info(String.format("keeps rendering for entity: %s", p_110775_1_.toString()));
@@ -52,7 +53,7 @@ public class NPCVillagerRenderer extends MobRenderer<CustomEntity, PlayerModel<C
 //            return new ResourceLocation("ivillager:textures/entities/villager_1_love" +
 //                    ".png");
 
-        return new ResourceLocation("intelligentvillager:textures/entities/" + p_110775_1_.getCustomSkin() +
-                ".png");
+        return new ResourceLocation(Utils.resourcePathBuilder("textures/entities",
+                p_110775_1_.getCustomSkin()+ ".png"));
     }
 }

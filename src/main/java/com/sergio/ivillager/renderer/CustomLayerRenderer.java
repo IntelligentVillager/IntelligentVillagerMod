@@ -2,6 +2,7 @@ package com.sergio.ivillager.renderer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.sergio.ivillager.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -25,8 +26,8 @@ public class CustomLayerRenderer<T extends LivingEntity, M extends PlayerModel<T
 
     public CustomLayerRenderer(IEntityRenderer<T, M> entityRendererIn) {
         super(entityRendererIn);
-        this.texture = new ResourceLocation("intelligentvillager:textures/entities" +
-                "/sss.png");
+        this.texture = new ResourceLocation(Utils.resourcePathBuilder(
+                "textures/entities", "sss.png"));
     }
 
     @Override

@@ -13,17 +13,19 @@ public class NPCVillagerTalkGoal extends Goal {
     public NPCVillagerTalkGoal(CustomEntity entity) {
         this.mob = entity;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK));
-        entity.getNavigation().setCanFloat(true);
     }
 
     public boolean canUse() {
-        return this.mob.getIsTalkingToPlayer() != null;
+        return this.mob.getProcessingMessage();
     }
 
     public void tick() {
-        if (this.mob.getIsTalkingToPlayer() != null) {
-            NPCVillagerManager.LOGGER.warn("TALK Goal activated");
-            this.mob.getLookControl().setLookAt(this.mob.getIsTalkingToPlayer().getPosition(0.5f));
+        if (this.mob.getProcessingMessage()) {
+            // Make the villager look at the player's eyes
+            this.mob.getLookControl().setLookAt(this.mob
+                    .getIsTalkingToPlayer()
+                    .getPosition(0.5f)
+                    .add(0.0f, 1.0f, 0.0f));
         }
     }
 }

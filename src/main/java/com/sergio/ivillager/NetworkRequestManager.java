@@ -123,7 +123,8 @@ public class NetworkRequestManager {
                 }
                 return null;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                LOGGER.error(e);
+                return e.getMessage();
             }
         }).thenAccept(callback);
     }

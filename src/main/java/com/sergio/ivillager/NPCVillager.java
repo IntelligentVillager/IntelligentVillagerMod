@@ -65,10 +65,10 @@ public class NPCVillager extends NPCModElement.ModElement {
                         "test_ainpc_spawn_egg"));
     }
 
-
     @SubscribeEvent
-    public void addFeatureToBiomes(BiomeLoadingEvent event) {
-        LOGGER.warn("BiomeLoadingEvent");
+    public void addFeatureToBiomes(BiomeLoadingEvent event)
+    {
+//        LOGGER.warn("BiomeLoadingEvent");
     }
 
     @SubscribeEvent
@@ -116,6 +116,11 @@ public class NPCVillager extends NPCModElement.ModElement {
         if (nearestVillager == null) return;
 
         for (CustomEntity obj : nearestVillager) {
+
+            obj.setIsTalkingToPlayer(player);
+            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+            obj.setProcessingMessage(true);
+
             NetworkRequestManager.asyncInteractWithNode("9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b",
                     event.getMessage().toString(),
                     response -> {
@@ -135,11 +140,11 @@ public class NPCVillager extends NPCModElement.ModElement {
                         messageComponent.append(nameString);
                         messageComponent.append(contentString);
 
-                        player.sendMessage(messageComponent, UUID.randomUUID());
-                    });
+                        obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
 
-            obj.setIsTalkingToPlayer(player);
-            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+                        player.sendMessage(messageComponent, UUID.randomUUID());
+                        obj.setProcessingMessage(false);
+                    });
         }
     }
 
@@ -172,7 +177,13 @@ public class NPCVillager extends NPCModElement.ModElement {
         // TODO: Rename the entity to NPCVillagerEntity
 
         private PlayerEntity isTalkingToPlayer = null;
+
+        // When processing message, villager should look at the player, but after sending the
+        // message the villager could continue look randomly
+        private Boolean isProcessingMessage = false;
+
         private String customSkin = "villager_0";
+
 
         public CustomEntity(FMLPlayMessages.SpawnEntity packet, World world) {
             this(entity, world);
@@ -247,6 +258,14 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void setIsTalkingToPlayer(PlayerEntity isTalkingToPlayer) {
             this.isTalkingToPlayer = isTalkingToPlayer;
+        }
+
+        public Boolean getProcessingMessage() {
+            return isProcessingMessage;
+        }
+
+        public void setProcessingMessage(Boolean processingMessage) {
+            isProcessingMessage = processingMessage;
         }
     }
 }

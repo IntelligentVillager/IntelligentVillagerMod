@@ -15,29 +15,29 @@ import java.util.Random;
 
 @OnlyIn(Dist.CLIENT)
 public class NPCRenderer {
-    public static class ModelRegisterHandler {
-        private static final String[] IMAGE_NAMES = {
-                "villager_0", "villager_1", "villager_2",
-                "villager_3", "villager_4", "villager_5"
-        };
-
-        @SubscribeEvent
-        @OnlyIn(Dist.CLIENT)
-        public void registerModels(ModelRegistryEvent event) {
-            RenderingRegistry.registerEntityRenderingHandler(NPCVillager.entity,
-                    renderManager -> new MobRenderer(renderManager, new PlayerModel(0, true),
-                            0.5f) {
-
-                        @Override
-                        public ResourceLocation getTextureLocation(Entity p_110775_1_) {
-                            Random rand = new Random();
-                            int index = rand.nextInt(IMAGE_NAMES.length);
-                            return new ResourceLocation("intelligentvillager:textures/entities/" + IMAGE_NAMES[index] +
-                                    ".png");
-                        }
-                    });
-        }
-    }
+//    public static class ModelRegisterHandler {
+//        private static final String[] IMAGE_NAMES = {
+//                "villager_0", "villager_1", "villager_2",
+//                "villager_3", "villager_4", "villager_5"
+//        };
+//
+//        @SubscribeEvent
+//        @OnlyIn(Dist.CLIENT)
+//        public void registerModels(ModelRegistryEvent event) {
+//            RenderingRegistry.registerEntityRenderingHandler(NPCVillager.entity,
+//                    renderManager -> new MobRenderer(renderManager, new PlayerModel(0, true),
+//                            0.5f) {
+//
+//                        @Override
+//                        public ResourceLocation getTextureLocation(Entity p_110775_1_) {
+//                            Random rand = new Random();
+//                            int index = rand.nextInt(IMAGE_NAMES.length);
+//                            return new ResourceLocation("intelligentvillager:textures/entities/" + IMAGE_NAMES[index] +
+//                                    ".png");
+//                        }
+//                    });
+//        }
+//    }
 
 
 }

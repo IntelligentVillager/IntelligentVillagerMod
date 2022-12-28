@@ -1,4 +1,4 @@
 {
-  "item.npctest.test_ainpc_spawn_egg": "智能角色生成蛋",
-  "entity.npctest.test_ainpc": "智能角色"
+  "item.intelligentvillager.test_ainpc_spawn_egg": "智能村民生成蛋",
+  "entity.intelligentvillager.test_ainpc": "智能村民"
 }

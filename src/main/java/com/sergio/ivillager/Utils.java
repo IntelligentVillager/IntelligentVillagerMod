@@ -58,4 +58,10 @@ public class Utils {
         }
     }
 
+    public static String resourcePathBuilder(String file_path, String file_name)
+    {
+        return String.format("intelligentvillager:%s" +
+                "/%s", file_path, file_name);
+    }
+
 }
