@@ -5,6 +5,7 @@ import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.*;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
@@ -143,6 +144,7 @@ public class NPCVillager extends NPCModElement.ModElement {
                             obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
 
                             player.sendMessage(messageComponent, UUID.randomUUID());
+                            obj.playTalkSound();
                         } else {
                             // Send default error message to the client indicating some error occurs
                             ITextComponent errorString = new StringTextComponent(Utils.ERROR_MESSAGE)
@@ -198,10 +200,11 @@ public class NPCVillager extends NPCModElement.ModElement {
         public CustomEntity(EntityType<CustomEntity> type, World world) {
             super(type, world);
 
+            setBaby(false);
             setNoAi(false);
+
             this.getNavigation().setCanFloat(true);
             this.setCanPickUpLoot(true);
-
 
             setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
 
@@ -211,15 +214,6 @@ public class NPCVillager extends NPCModElement.ModElement {
 //            setCustomName(new StringTextComponent(Utils.RandomNameGenerator.generateName()));
             setCustomNameVisible(true);
         }
-
-//        @Override
-//        public void tick() {
-//            super.tick();
-//            if (this.isTalkingToPlayer == null) {
-//                LOGGER.warn("tick!!!!");
-//                this.goalSelector.disableControlFlag(Goal.Flag.MOVE);
-//            }
-//        }
 
         @Override
         protected void registerGoals() {
@@ -238,7 +232,12 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.goalSelector.addGoal(6, new NPCVillagerWalkingGoal(this, 1.0f));
         }
 
-        // TODO: Play sound when villager talk
+        // FINISHED: Play sound when villager talk
+
+        public void playTalkSound () {
+            this.playSound(Utils.RandomAmbientSound.generateSound(), this.getSoundVolume(),
+                    this.getVoicePitch());
+        }
 
         @Override
         public net.minecraft.util.SoundEvent getHurtSound(DamageSource ds) {

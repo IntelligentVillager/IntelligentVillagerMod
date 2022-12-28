@@ -3,6 +3,8 @@ package com.sergio.ivillager;
 import java.util.Random;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.SoundEvents;
 
 import java.util.Map;
 
@@ -41,6 +43,19 @@ public class Utils {
             Random rand = new Random();
             int index = rand.nextInt(IMAGE_NAMES.length);
             return IMAGE_NAMES[index];
+        }
+    }
+
+    public static class RandomAmbientSound {
+        private static final SoundEvent[] Sound_NAMES = {
+                SoundEvents.VILLAGER_AMBIENT, SoundEvents.VILLAGER_CELEBRATE,
+                SoundEvents.VILLAGER_YES, SoundEvents.VILLAGER_NO
+        };;
+
+        public static SoundEvent generateSound() {
+            Random rand = new Random();
+            int index = rand.nextInt(Sound_NAMES.length);
+            return Sound_NAMES[index];
         }
     }
 
