@@ -1,5 +1,6 @@
 package com.sergio.ivillager.config;
 import com.sergio.ivillager.Utils;
+import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -9,38 +10,33 @@ import java.util.Properties;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 public class Config {
 
-    //TODO: The config file needs to be read locally and stored persistently, including ssotoken and expiration time judgment, accesstoken and accesskey storage and judgment, worldview background information and all villager entities and their character information
-    public static ForgeConfigSpec COMMON_CONFIG;
-    public static ForgeConfigSpec.IntValue VALUE;
+    public static final Logger LOGGER = LogManager.getLogger(Config.class);
 
-    private static final String RESOURCE_FILE = new ResourceLocation(Utils.resourcePathBuilder(
-            "config", "config.json")).getPath();
+    //FINISHED: The config file needs to be read locally and stored persistently, including ssotoken
+    // and expiration time judgment, accesstoken and accesskey storage and judgment, worldview background information
+    // TODO: all villager entities and their character information should be stored in the world
+    //  save data but not config
+
+    public static ForgeConfigSpec COMMON_CONFIG;
+    public static ForgeConfigSpec.ConfigValue<String> SOCRATES_EMAIL;
+    public static ForgeConfigSpec.ConfigValue<String> SOCRATES_PWD;
 
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
         COMMON_BUILDER.comment("General settings").push("general");
-        VALUE = COMMON_BUILDER.comment("Test config value").defineInRange("value", 10, 0, Integer.MAX_VALUE);
+        SOCRATES_EMAIL = COMMON_BUILDER.comment("Socrates User Name (email address)").define("EMAIL"
+                , "");
+        SOCRATES_PWD = COMMON_BUILDER.comment("Socrates User Password ").define("PWD"
+                , "");
+
         COMMON_BUILDER.pop();
         COMMON_CONFIG = COMMON_BUILDER.build();
-
-        try {
-            InputStream inputStream = new FileInputStream(RESOURCE_FILE);
-        // create a JsonReader object from the input stream
-            JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
-            // create a JsonParser object
-            JsonParser parser = new JsonParser();
-            // parse the JSON data from the file
-            JsonObject data = parser.parse(reader).getAsJsonObject();
-            // close the reader
-            reader.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
-    private static Properties config;
 }

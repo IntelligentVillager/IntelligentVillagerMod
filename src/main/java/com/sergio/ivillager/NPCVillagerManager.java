@@ -127,6 +127,12 @@ public class NPCVillagerManager {
         this.accessKey = accessKey;
     }
 
+    public Boolean isVerified(){
+        if (this.ssoToken == null || this.accessKey == null || this.accessToken == null) {
+            return false;
+        }
+        return true;
+    }
     public static class VillagerData {
         private int id;
         private CustomEntity entity;

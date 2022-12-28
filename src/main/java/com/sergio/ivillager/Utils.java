@@ -8,6 +8,9 @@ import java.util.Map;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
+    public static final String ERROR_MESSAGE = "[OOPS] Intelligent Villager Mod seemed not " +
+            "functioning " +
+            "properly on this server, please contact the server operator for more support.";
 
     public static class RandomNameGenerator {
 

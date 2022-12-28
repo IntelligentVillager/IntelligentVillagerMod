@@ -1,6 +1,9 @@
 package com.sergio.ivillager;
 
+import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -40,6 +43,11 @@ public class NPCVillagerMod {
 
     public NPCVillagerMod() {
         elements = new NPCModElement();
+
+        LOGGER.info("IntelligentVillager mod loading");
+
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG);
+
         FMLJavaModLoadingContext.get().getModEventBus().register(this);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientLoad);
@@ -94,21 +102,30 @@ public class NPCVillagerMod {
         public void serverLoad(FMLServerStartingEvent event) throws Exception {
             LOGGER.warn("serverLoad");
 
-            // TODO: email and password read from config file
+            // FINISHED: email and password read from config file
             // TODO: server integration debugging (last step)
 
-            String ssotoken = NetworkRequestManager.getAuthToken("***REMOVED***", "***REMOVED***");
-            LOGGER.warn(String.format("SSO TOKEN:%s", ssotoken));
-            NPCVillagerManager.getInstance().setSsoToken(ssotoken);
+            String socrates_username = Config.SOCRATES_EMAIL.get().toString();
+            String socrates_userpwd = Config.SOCRATES_PWD.get().toString();
+
+            if (socrates_username.equals("") || socrates_userpwd.equals("")) {
+                LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +
+                        " CONFIG FILE " +
+                        "UNDER MINECRAFT FOLDER TO INITIATE INTELLIGENTVILLAGER MOD!");
+            } else {
+                String ssotoken = NetworkRequestManager.getAuthToken(socrates_username, socrates_userpwd);
+                LOGGER.info(String.format("Socrates sso token: %s", ssotoken));
+                NPCVillagerManager.getInstance().setSsoToken(ssotoken);
+
+                Map<String, String> accessKeyandToken = NetworkRequestManager.getAccessToken(ssotoken);
+                NPCVillagerManager.getInstance().setAccessKey(accessKeyandToken.get("key"));
+                NPCVillagerManager.getInstance().setAccessToken(accessKeyandToken.get("token"));
+                LOGGER.warn(String.format("ACCESS KEY:%s \n ACCESS TOKEN:%s", accessKeyandToken.get(
+                        "key"),accessKeyandToken.get("token")));
+            }
 
             // TODO: access_token and key contains history messages and context, it should be
             //  stored locally with the worldSaveData
-
-            Map<String, String> accessKeyandToken = NetworkRequestManager.getAccessToken(ssotoken);
-            NPCVillagerManager.getInstance().setAccessKey(accessKeyandToken.get("key"));
-            NPCVillagerManager.getInstance().setAccessToken(accessKeyandToken.get("token"));
-            LOGGER.warn(String.format("ACCESS KEY:%s \n ACCESS TOKEN:%s", accessKeyandToken.get(
-                    "key"),accessKeyandToken.get("token")));
 
             this.parent.elements.getElements().forEach(element -> element.serverLoad(event));
         }

@@ -66,8 +66,7 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     @SubscribeEvent
-    public void addFeatureToBiomes(BiomeLoadingEvent event)
-    {
+    public void addFeatureToBiomes(BiomeLoadingEvent event) {
 //        LOGGER.warn("BiomeLoadingEvent");
     }
 
@@ -124,25 +123,32 @@ public class NPCVillager extends NPCModElement.ModElement {
             NetworkRequestManager.asyncInteractWithNode("9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b",
                     event.getMessage().toString(),
                     response -> {
-                        ITextComponent nameString = new StringTextComponent(String.format("<%s>",
-                                obj.getCustomName().getString()))
-                                .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
-                        ITextComponent contentString = new StringTextComponent(response)
-                                .setStyle(Style.EMPTY);
+                        if (response != null) {
+                            ITextComponent nameString = new StringTextComponent(String.format("<%s>",
+                                    obj.getCustomName().getString()))
+                                    .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
+                            ITextComponent contentString = new StringTextComponent(response)
+                                    .setStyle(Style.EMPTY);
 
-                        TextComponent messageComponent = new TextComponent() {
-                            @Override
-                            public TextComponent plainCopy() {
-                                return null;
-                            }
-                        };
+                            TextComponent messageComponent = new TextComponent() {
+                                @Override
+                                public TextComponent plainCopy() {
+                                    return null;
+                                }
+                            };
 
-                        messageComponent.append(nameString);
-                        messageComponent.append(contentString);
+                            messageComponent.append(nameString);
+                            messageComponent.append(contentString);
 
-                        obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
+                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
 
-                        player.sendMessage(messageComponent, UUID.randomUUID());
+                            player.sendMessage(messageComponent, UUID.randomUUID());
+                        } else {
+                            // Send default error message to the client indicating some error occurs
+                            ITextComponent errorString = new StringTextComponent(Utils.ERROR_MESSAGE)
+                                    .setStyle(Style.EMPTY.withColor(TextFormatting.DARK_RED));
+                            player.sendMessage(errorString, UUID.randomUUID());
+                        }
                         obj.setProcessingMessage(false);
                     });
         }
