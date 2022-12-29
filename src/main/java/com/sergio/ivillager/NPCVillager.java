@@ -1,12 +1,17 @@
 package com.sergio.ivillager;
 
+import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.context.ParsedArgument;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
+import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.*;
+import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -37,6 +42,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.ServerChatEvent;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.UUID;
 
 @NPCModElement.ModElement.Tag
@@ -107,6 +113,18 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     @SubscribeEvent
+    public void onCommandEvent(CommandEvent event) throws  Exception {
+        LOGGER.warn("received command event");
+        LOGGER.info(event.getParseResults());
+        ParseResults<CommandSource> result = event.getParseResults();
+        Entity sender = result.getContext().getSource().getEntity();
+        if (sender instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) sender;
+//            String command = result.getContext().getCommand();
+        }
+    }
+
+    @SubscribeEvent
     public void onServerChat(ServerChatEvent event) throws Exception {
         LOGGER.warn("received ServerChatEvent");
         PlayerEntity player = event.getPlayer();
@@ -114,6 +132,13 @@ public class NPCVillager extends NPCModElement.ModElement {
         ArrayList<CustomEntity> nearestVillager =
                 NPCVillagerManager.getInstance().getNeareFacedVillager(player);
         if (nearestVillager == null) return;
+        String userMsg  = event.getMessage().toString();
+        if (userMsg.startsWith("gg-")) {
+            event.setCanceled(true);
+            userMsg = userMsg.replace("gg-", "");
+        } else {
+            return;
+        }
 
         for (CustomEntity obj : nearestVillager) {
 
@@ -121,8 +146,9 @@ public class NPCVillager extends NPCModElement.ModElement {
             obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
             obj.setProcessingMessage(true);
 
+            String finalUserMsg = userMsg;
             NetworkRequestManager.asyncInteractWithNode("9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b",
-                    event.getMessage().toString(),
+                    userMsg,
                     response -> {
                         if (response != null) {
                             ITextComponent nameString = new StringTextComponent(String.format("<%s>",
@@ -147,7 +173,14 @@ public class NPCVillager extends NPCModElement.ModElement {
                             obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().position());
 
 //                            player.sendMessage(messageComponent, UUID.randomUUID());
+                            player.sendMessage(new StringTextComponent(String.format("<%s> %s", player.getName().getString(), finalUserMsg)), player.getUUID());
                             player.sendMessage(msg, player.getUUID());
+
+                            if (response.startsWith("*") && response.endsWith("*")) {
+                                obj.eatAndDigestFood();
+                                obj.setJumping(true);
+                            }
+
                             obj.playTalkSound();
                         } else {
                             // Send default error message to the client indicating some error occurs
