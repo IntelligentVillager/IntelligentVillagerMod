@@ -10,6 +10,9 @@ import java.util.Map;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
+
+    public static final String TEST_NODE_ID = "9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b";
+
     public static final String ERROR_MESSAGE = "[OOPS] Intelligent Villager Mod seemed not " +
             "functioning " +
             "properly on this server, please contact the server operator for more support.";

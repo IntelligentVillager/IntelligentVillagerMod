@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -88,6 +89,7 @@ public class NetworkRequestManager {
         }
     }
 
+    @Deprecated
     public static CompletableFuture<Void> asyncInteractWithNode(String nodeId, String text, Consumer<String> callback) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -105,6 +107,44 @@ public class NetworkRequestManager {
                                         NPCVillagerManager
                                                 .getInstance()
                                                 .getAccessToken()),
+                                String.format("{\"text" +
+                                        "\":\"%s\"}",text));
+                JsonObject resultJson =
+                        JsonConverter.encodeStringToJson(resultStr);
+                if (0 == resultJson.get("code").getAsInt()) {
+                    return resultJson.get("data")
+                            .getAsJsonArray()
+                            .get(0)
+                            .getAsJsonObject()
+                            .get("text")
+                            .getAsString();
+                }
+                return null;
+            } catch (Exception e) {
+                LOGGER.error(e);
+                e.printStackTrace();
+                return e.getMessage();
+            }
+        }).thenAccept(callback);
+    }
+
+    public static CompletableFuture<Void> asyncInteractWithNode(UUID PlayerId, String nodeId, String text, Consumer<String> callback) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                if (!NPCVillagerManager
+                        .getInstance().isVerified(PlayerId)){
+                    // authentication information not set in config yet
+                    return null;
+                }
+
+                String resultStr =
+                        NetworkRequestManager.sendPostRequest(String.format(URLs.INTERACT_URL.getUrl(), nodeId,
+                                        NPCVillagerManager
+                                                .getInstance()
+                                                .getAccessKey(PlayerId),
+                                        NPCVillagerManager
+                                                .getInstance()
+                                                .getAccessToken(PlayerId)),
                                 String.format("{\"text" +
                                         "\":\"%s\"}",text));
                 JsonObject resultJson =

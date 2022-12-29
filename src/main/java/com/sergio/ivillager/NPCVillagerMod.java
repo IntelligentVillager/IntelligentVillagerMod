@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -101,6 +102,26 @@ public class NPCVillagerMod {
         }
 
         @SubscribeEvent
+        public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+
+            LOGGER.info(String.format("[%s] Player %s has logged in.",
+                    event.getPlayer().getStringUUID(),
+                    event.getPlayer().getName().getString()));
+
+            Map<String, String> accessKeyandToken =
+                    NetworkRequestManager.getAccessToken(NPCVillagerManager.getInstance().getSsoToken());
+
+            NPCVillagerManager.getInstance().setAccessKey(event.getPlayer().getUUID(), accessKeyandToken.get("key"));
+            NPCVillagerManager.getInstance().setAccessToken(event.getPlayer().getUUID(),
+                    accessKeyandToken.get("token"));
+
+            LOGGER.warn(String.format("[%s] Successfully generated Socrates ACCESS KEY:%s and \n " +
+                            "ACCESS TOKEN:%s for Player %s",
+                    event.getPlayer().getStringUUID(), accessKeyandToken.get(
+                    "key"),accessKeyandToken.get("token"), event.getPlayer().getName().getString()));
+        }
+
+        @SubscribeEvent
         public void serverLoad(FMLServerStartingEvent event) throws Exception {
             LOGGER.warn("serverLoad");
 
@@ -118,12 +139,6 @@ public class NPCVillagerMod {
                 String ssotoken = NetworkRequestManager.getAuthToken(socrates_username, socrates_userpwd);
                 LOGGER.info(String.format("Socrates sso token: %s", ssotoken));
                 NPCVillagerManager.getInstance().setSsoToken(ssotoken);
-
-                Map<String, String> accessKeyandToken = NetworkRequestManager.getAccessToken(ssotoken);
-                NPCVillagerManager.getInstance().setAccessKey(accessKeyandToken.get("key"));
-                NPCVillagerManager.getInstance().setAccessToken(accessKeyandToken.get("token"));
-                LOGGER.warn(String.format("ACCESS KEY:%s \n ACCESS TOKEN:%s", accessKeyandToken.get(
-                        "key"),accessKeyandToken.get("token")));
             }
 
             // TODO: access_token and key contains history messages and context, it should be

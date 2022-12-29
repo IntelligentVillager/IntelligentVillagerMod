@@ -147,7 +147,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
             obj.setProcessingMessage(true);
 
-            NetworkRequestManager.asyncInteractWithNode("9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b",
+            NetworkRequestManager.asyncInteractWithNode(player.getUUID(), Utils.TEST_NODE_ID,
                     userMsg,
                     response -> {
                         if (response != null) {
@@ -169,10 +169,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
                             ITextComponent msg = new StringTextComponent(String.format("<villager response><%s> %s", obj.getCustomName().getString(), response));
 
-//                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
                             obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().position());
 
-//                            player.sendMessage(messageComponent, UUID.randomUUID());
                             player.sendMessage(msg, player.getUUID());
 
                             if (response.startsWith("*") && response.endsWith("*")) {

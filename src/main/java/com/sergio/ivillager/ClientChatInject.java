@@ -1,6 +1,9 @@
 package com.sergio.ivillager;
 
 
+import com.sergio.ivillager.NPCVillager.CustomEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -8,9 +11,21 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.World;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Mod.EventBusSubscriber
 public class ClientChatInject {
+
+    public static final Logger LOGGER = LogManager.getLogger(ClientChatInject.class);
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
     public static void onChatMessage(ClientChatEvent event) {
@@ -26,12 +41,52 @@ public class ClientChatInject {
 
         if (message.startsWith("/")) {
         } else {
+            List<Entity> nearbyEntities = getNearbyEntities(getCurrentPlayer(),
+                    getCurrentPlayer().getEntity().level, 5.0);
+
             // change event
             String modifiedMessage = String.format("<villager command> %s", message);
             event.setMessage(modifiedMessage);
             event.setCanceled(false);
         }
 
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
+        Vector3d playerPos = player.position();
+        Vector3d playerLook = player.getViewVector(0.5f);
+
+        ArrayList<CustomEntity> nearCustomVillagerList = new ArrayList<>();
+
+        for (Entity data : nearByEntities) {
+            if (data instanceof CustomEntity) {
+                Vector3d villagerPos = data.position();
+                Vector3d playerToVillager = villagerPos.subtract(playerPos);
+                double distance = playerToVillager.length();
+                if (distance < 6 && playerLook.dot(playerToVillager) > 0) {
+                    nearCustomVillagerList.add((CustomEntity) data);
+                }
+            }
+        }
+        LOGGER.warn(String.format("%d villagers in client world instance, %d in interactive " +
+                "range", nearByEntities.size(),nearCustomVillagerList.size()));
+
+        return nearCustomVillagerList;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static PlayerEntity getCurrentPlayer() {
+        return Minecraft.getInstance().player;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static List<Entity> getNearbyEntities(PlayerEntity player, World world, double radius) {
+        double x0 = player.position().x;
+        double y0 = player.position().y;
+        double z0 = player.position().z;
+        AxisAlignedBB boundingBox = new AxisAlignedBB(x0 - radius, y0 - radius, z0 - radius, x0 + radius, y0 + radius, z0 + radius);
+        return world.getEntities(player, boundingBox);
     }
 
     @SubscribeEvent

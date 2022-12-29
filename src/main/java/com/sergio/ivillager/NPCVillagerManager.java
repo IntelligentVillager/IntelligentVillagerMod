@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.sergio.ivillager.NPCVillager.CustomEntity;
 import org.apache.logging.log4j.Logger;
@@ -19,9 +20,13 @@ public class NPCVillagerManager {
     private static NPCVillagerManager instance;
 
     private Map<Integer, VillagerData> villagersData;
+
+    // Universal ssotoken
     private String ssoToken;
-    private String accessToken;
-    private String accessKey;
+
+
+    private Map<UUID, String> accessToken;
+    private Map<UUID, String> accessKey;
 
     private NPCVillagerManager() {
         this.villagersData = new HashMap<>();
@@ -115,20 +120,30 @@ public class NPCVillagerManager {
         this.ssoToken = ssoToken;
     }
 
+    public String getAccessToken(UUID PlayerUUD) {
+        return accessToken.get(PlayerUUD);
+    }
+
+    @Deprecated
     public String getAccessToken() {
-        return accessToken;
+        return null;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public void setAccessToken(UUID PlayerUUID, String accessToken) {
+        this.accessToken.put(PlayerUUID, accessToken);
     }
 
+    public String getAccessKey(UUID PlayerUUD) {
+        return accessKey.get(PlayerUUD);
+    }
+
+    @Deprecated
     public String getAccessKey() {
-        return accessKey;
+        return null;
     }
 
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
+    public void setAccessKey(UUID PlayerUUID, String accessKey) {
+        this.accessKey.put(PlayerUUID, accessKey);
     }
 
     public Boolean isVerified(){
@@ -137,6 +152,14 @@ public class NPCVillagerManager {
         }
         return true;
     }
+
+    public Boolean isVerified(UUID PlayerUUID){
+        if (this.ssoToken == null || this.accessKey.get(PlayerUUID) == null || this.accessToken.get(PlayerUUID) == null) {
+            return false;
+        }
+        return true;
+    }
+
     public static class VillagerData {
         private int id;
         private CustomEntity entity;
