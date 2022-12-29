@@ -64,6 +64,8 @@ public class NPCVillagerMod {
         RenderingRegistry.registerEntityRenderingHandler(NPCVillager.entity, NPCVillagerRenderer::new);
 
         elements.getElements().forEach(element -> element.clientLoad(event));
+
+        MinecraftForge.EVENT_BUS.register(new ClientChatInject());
     }
 
     @SubscribeEvent

@@ -133,9 +133,10 @@ public class NPCVillager extends NPCModElement.ModElement {
                 NPCVillagerManager.getInstance().getNeareFacedVillager(player);
         if (nearestVillager == null) return;
         String userMsg  = event.getMessage().toString();
-        if (userMsg.startsWith("gg-")) {
+        if (userMsg.startsWith("<villager command>")) {
             event.setCanceled(true);
-            userMsg = userMsg.replace("gg-", "");
+            player.sendMessage(new StringTextComponent(String.format("<%s> %s", player.getName().getString(), userMsg)), player.getUUID());
+            userMsg = userMsg.replace("<villager command> ", "");
         } else {
             return;
         }
@@ -146,7 +147,6 @@ public class NPCVillager extends NPCModElement.ModElement {
             obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
             obj.setProcessingMessage(true);
 
-            String finalUserMsg = userMsg;
             NetworkRequestManager.asyncInteractWithNode("9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b",
                     userMsg,
                     response -> {
@@ -167,13 +167,12 @@ public class NPCVillager extends NPCModElement.ModElement {
                             messageComponent.append(nameString);
                             messageComponent.append(contentString);
 
-                            ITextComponent msg = new StringTextComponent(String.format("<%s> %s", obj.getCustomName().getString(), response));
+                            ITextComponent msg = new StringTextComponent(String.format("<villager response><%s> %s", obj.getCustomName().getString(), response));
 
 //                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
                             obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().position());
 
 //                            player.sendMessage(messageComponent, UUID.randomUUID());
-                            player.sendMessage(new StringTextComponent(String.format("<%s> %s", player.getName().getString(), finalUserMsg)), player.getUUID());
                             player.sendMessage(msg, player.getUUID());
 
                             if (response.startsWith("*") && response.endsWith("*")) {
@@ -190,6 +189,8 @@ public class NPCVillager extends NPCModElement.ModElement {
                         }
                         obj.setProcessingMessage(false);
                     });
+            // TODO: 多个 NPC 一起，只取第一个？
+            break;
         }
     }
 
