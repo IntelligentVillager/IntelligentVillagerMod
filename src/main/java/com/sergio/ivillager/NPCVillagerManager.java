@@ -58,20 +58,22 @@ public class NPCVillagerManager {
     }
 
     public void updateVillagers(PlayerEntity player) {
-        Vector3d playerPos = player.getPosition(0.5f);
+//        Vector3d playerPos = player.getPosition(0.5f);
+        Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
         for (VillagerData data : this.villagersData.values()) {
             CustomEntity villager = data.getEntity();
             if (villager != null) {
-                Vector3d villagerPos = villager.getPosition(0.5f);
+//                Vector3d villagerPos = villager.getPosition(0.5f);
+                Vector3d villagerPos = villager.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
                 if (villager.getIsTalkingToPlayer() != null && villager.getIsTalkingToPlayer().getId() == player.getId()) {
                     if (distance > 6 || playerLook.dot(playerToVillager) <= 0) {
-                        LOGGER.warn(String.format("villager %s no longer talk to player %s",
-                                villager.getCustomName().getString(),
-                                player.getName().getString()));
+//                        LOGGER.warn(String.format("villager %s no longer talk to player %s",
+//                                villager.getCustomName().getString(),
+//                                player.getName().getString()));
                         villager.setIsTalkingToPlayer(null);
                         villager.goalSelector.enableControlFlag(Goal.Flag.MOVE);
                     }
@@ -81,7 +83,8 @@ public class NPCVillagerManager {
     }
 
     public ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player) {
-        Vector3d playerPos = player.getPosition(0.5f);
+//        Vector3d playerPos = player.getPosition(0.5f);
+        Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
         ArrayList<CustomEntity> nearCustomVillagerList = new ArrayList<>();
@@ -89,7 +92,8 @@ public class NPCVillagerManager {
         for (VillagerData data : this.villagersData.values()) {
             CustomEntity villager = data.getEntity();
             if (villager != null) {
-                Vector3d villagerPos = villager.getPosition(0.5f);
+//                Vector3d villagerPos = villager.getPosition(0.5f);
+                Vector3d villagerPos = villager.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
                 if (distance < 6 && playerLook.dot(playerToVillager) > 0) {

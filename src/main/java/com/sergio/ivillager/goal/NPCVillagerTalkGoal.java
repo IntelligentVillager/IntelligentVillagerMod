@@ -22,10 +22,13 @@ public class NPCVillagerTalkGoal extends Goal {
     public void tick() {
         if (this.mob.getProcessingMessage()) {
             // Make the villager look at the player's eyes
-            this.mob.getLookControl().setLookAt(this.mob
-                    .getIsTalkingToPlayer()
-                    .getPosition(0.5f)
-                    .add(0.0f, 1.0f, 0.0f));
+            if (this.mob.getIsTalkingToPlayer() != null) {
+                this.mob.getLookControl().setLookAt(this.mob
+                        .getIsTalkingToPlayer()
+//                    .getPosition(0.5f)
+                        .position()
+                        .add(0.0f, 1.0f, 0.0f));
+            }
         }
     }
 }

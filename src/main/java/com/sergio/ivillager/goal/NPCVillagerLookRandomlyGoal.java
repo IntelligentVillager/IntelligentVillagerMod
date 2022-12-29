@@ -49,10 +49,12 @@ public class NPCVillagerLookRandomlyGoal extends Goal {
         double d0 = (Math.PI * 2D) * this.mob.getRandom().nextDouble();
         double d1 = Math.random();
 
-        if (this.mob.getIsTalkingToPlayer() != null && !this.lastSeeingPlayerPosition.equals(this.mob.getIsTalkingToPlayer().getPosition(0.5f)))
+//        if (this.mob.getIsTalkingToPlayer() != null && !this.lastSeeingPlayerPosition.equals(this.mob.getIsTalkingToPlayer().getPosition(0.5f)))
+        if (this.mob.getIsTalkingToPlayer() != null && !this.lastSeeingPlayerPosition.equals(this.mob.getIsTalkingToPlayer().position()))
         {
             d1 = 0.0;
-            this.lastSeeingPlayerPosition = this.mob.getIsTalkingToPlayer().getPosition(0.5f);
+//            this.lastSeeingPlayerPosition = this.mob.getIsTalkingToPlayer().getPosition(0.5f);
+            this.lastSeeingPlayerPosition = this.mob.getIsTalkingToPlayer().position();
         }
 
         this.relX = Math.cos(d0);
@@ -63,7 +65,8 @@ public class NPCVillagerLookRandomlyGoal extends Goal {
             if (d1 < 0.5) {
                 this.lookTarget = this.mob
                         .getIsTalkingToPlayer()
-                        .getPosition(0.5f)
+//                        .getPosition(0.5f)
+                        .position()
                         .add(0.0f, 1.0f, 0.0f);
             } else {
                 this.lookTarget = new Vector3d(this.mob.getX() + this.relX, this.mob.getEyeY(),

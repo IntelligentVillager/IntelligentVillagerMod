@@ -141,9 +141,13 @@ public class NPCVillager extends NPCModElement.ModElement {
                             messageComponent.append(nameString);
                             messageComponent.append(contentString);
 
-                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
+                            ITextComponent msg = new StringTextComponent(String.format("<%s> %s", obj.getCustomName().getString(), response));
 
-                            player.sendMessage(messageComponent, UUID.randomUUID());
+//                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().getPosition(0.5f));
+                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().position());
+
+//                            player.sendMessage(messageComponent, UUID.randomUUID());
+                            player.sendMessage(msg, player.getUUID());
                             obj.playTalkSound();
                         } else {
                             // Send default error message to the client indicating some error occurs
@@ -210,7 +214,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
             // TODO: Name and personal background should be generated from GPT3 API instead of
             //  setting it manually
-            setCustomName(ITextComponent.nullToEmpty("Jobbs"));
+//            setCustomName(ITextComponent.nullToEmpty("Jobbs"));
+            setCustomName(new StringTextComponent("Jobbs"));
 //            setCustomName(new StringTextComponent(Utils.RandomNameGenerator.generateName()));
             setCustomNameVisible(true);
         }
