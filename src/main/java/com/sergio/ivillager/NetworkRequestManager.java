@@ -50,7 +50,7 @@ public class NetworkRequestManager {
             String result = NetworkRequestManager.sendPostRequest(URLs.AUTH_URL.getUrl(), String.format("{\"email\":\"%s\", \"password\":\"%s\"}", email, password));
             return JsonConverter.encodeStringToJson(result).getAsJsonObject("data").get("ssotoken").getAsString();
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e);
             e.printStackTrace();
             return e.getMessage();
         }
@@ -82,7 +82,7 @@ public class NetworkRequestManager {
             }
             return result;
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e);
             e.printStackTrace();
             return result;
         }
@@ -119,7 +119,7 @@ public class NetworkRequestManager {
                 }
                 return null;
             } catch (Exception e) {
-                LOGGER.error(e.getMessage());
+                LOGGER.error(e);
                 e.printStackTrace();
                 return e.getMessage();
             }
