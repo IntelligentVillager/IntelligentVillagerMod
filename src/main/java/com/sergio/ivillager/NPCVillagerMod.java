@@ -102,11 +102,11 @@ public class NPCVillagerMod {
         }
 
         @SubscribeEvent
-        public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
 
-            LOGGER.info(String.format("[%s] Player %s has logged in.",
-                    event.getPlayer().getStringUUID(),
-                    event.getPlayer().getName().getString()));
+//            LOGGER.info(String.format("[%s] Player %s has logged in.",
+//                    event.getPlayer().getStringUUID(),
+//                    event.getPlayer().getName().getString()));
 
             Map<String, String> accessKeyandToken =
                     NetworkRequestManager.getAccessToken(NPCVillagerManager.getInstance().getSsoToken());

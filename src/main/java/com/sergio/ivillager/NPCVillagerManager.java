@@ -25,8 +25,8 @@ public class NPCVillagerManager {
     private String ssoToken;
 
 
-    private Map<UUID, String> accessToken;
-    private Map<UUID, String> accessKey;
+    private Map<UUID, String> accessToken = new HashMap<UUID, String>();
+    private Map<UUID, String> accessKey = new HashMap<UUID, String>();;
 
     private NPCVillagerManager() {
         this.villagersData = new HashMap<>();
