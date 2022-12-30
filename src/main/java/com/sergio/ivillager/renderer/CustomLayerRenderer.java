@@ -87,6 +87,48 @@ public class CustomLayerRenderer<T extends LivingEntity, M extends PlayerModel<T
 // Construct the geometry of the custom layer using the MatrixStack and IVertexBuilder
 
         p_225628_1_.popPose();
+
+
+        // display image from behind the villager
+
+        p_225628_1_.pushPose();
+
+        p_225628_1_.translate(0.0, -1.4, 0.0);
+//        p_225628_1_.mulPose(new Quaternion(0.0F, 1.0F, 0.0F, (float) Math.toRadians(0.0F)));
+        p_225628_1_.mulPose(new Quaternion(0.0F, 0.0F, 0.0F, true));
+        p_225628_1_.scale(0.5f, 0.5f, 0.5f);
+
+        vertexBuilder.vertex(p_225628_1_.last().pose(), -1.0F, -1.0F, 0.0F)
+                .color(1.0F, 1.0F, 1.0F, 1.0F)
+                .uv(0.0F, 0.0F)
+                .overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(240)
+                .normal(p_225628_1_.last().normal(), 0.0F, 1.0F, 0.0F)
+                .endVertex();
+        vertexBuilder.vertex(p_225628_1_.last().pose(), 1.0F, -1.0F, 0.0F)
+                .color(1.0F, 1.0F, 1.0F, 1.0F)
+                .uv(1.0F, 0.0F)
+                .overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(240)
+                .normal(p_225628_1_.last().normal(), 0.0F, 1.0F, 0.0F)
+                .endVertex();
+        vertexBuilder.vertex(p_225628_1_.last().pose(), 1.0F, 1.0F, 0.0F)
+                .color(1.0F, 1.0F, 1.0F, 1.0F)
+                .uv(1.0F, 1.0F)
+                .overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(240)
+                .normal(p_225628_1_.last().normal(), 0.0F, 1.0F, 0.0F)
+                .endVertex();
+        vertexBuilder.vertex(p_225628_1_.last().pose(), -1.0F, 1.0F, 0.0F)
+                .color(1.0F, 1.0F, 1.0F, 1.0F)
+                .uv(0.0F, 1.0F)
+                .overlayCoords(OverlayTexture.NO_OVERLAY)
+                .uv2(240)
+                .normal(p_225628_1_.last().normal(), 0.0F, 1.0F, 0.0F)
+                .endVertex();
+
+        // Construct the geometry of the custom layer using the MatrixStack and IVertexBuilder
+        p_225628_1_.popPose();
     }
 
     public void setTexture(ResourceLocation texture) {
