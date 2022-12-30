@@ -102,6 +102,13 @@ public class NPCVillagerMod {
         }
 
         @SubscribeEvent
+        public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+            LOGGER.info(String.format("[%s] Player %s has logged out.",
+                    event.getPlayer().getStringUUID(),
+                    event.getPlayer().getName().getString()));
+        }
+
+        @SubscribeEvent
         public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
 
 //            LOGGER.info(String.format("[%s] Player %s has logged in.",
@@ -126,7 +133,7 @@ public class NPCVillagerMod {
             LOGGER.warn("serverLoad");
 
             // FINISHED: email and password read from config file
-            // TODO: server integration debugging (last step)
+            // FINISHED: server integration debugging (last step)
 
             String socrates_username = Config.SOCRATES_EMAIL.get().toString();
             String socrates_userpwd = Config.SOCRATES_PWD.get().toString();
@@ -141,7 +148,7 @@ public class NPCVillagerMod {
                 NPCVillagerManager.getInstance().setSsoToken(ssotoken);
             }
 
-            // TODO: access_token and key contains history messages and context, it should be
+            // FINISHED: access_token and key contains history messages and context, it should be
             //  stored locally with the worldSaveData
 
             this.parent.elements.getElements().forEach(element -> element.serverLoad(event));

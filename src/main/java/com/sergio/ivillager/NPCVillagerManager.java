@@ -43,7 +43,8 @@ public class NPCVillagerManager {
         int id = villager.getId();
         if (!this.villagersData.containsKey(id)) {
             this.villagersData.put(id, new VillagerData(id, villager));
-            LOGGER.warn("adding new NPC villager entity:");
+            LOGGER.warn(String.format("[SERVER] Adding new NPC villager entity:[%s]",
+                    villager.getStringUUID()));
             LOGGER.warn(villager);
         }
     }
@@ -85,6 +86,18 @@ public class NPCVillagerManager {
                 }
             }
         }
+    }
+
+    public CustomEntity getEntityByUUID (String EntityStringUUID) {
+        for (VillagerData data : this.villagersData.values()) {
+            CustomEntity villager = data.getEntity();
+            if (villager != null) {
+                if (villager.getStringUUID().equalsIgnoreCase(EntityStringUUID)) {
+                    return villager;
+                }
+            }
+        }
+        return null;
     }
 
     public ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player) {

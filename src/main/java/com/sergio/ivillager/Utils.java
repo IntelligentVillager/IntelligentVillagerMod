@@ -1,7 +1,10 @@
 package com.sergio.ivillager;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
@@ -70,6 +73,10 @@ public class Utils {
             return gson.fromJson(jsonString, JsonObject.class);
         }
 
+        public static String encodeMapToJsonString(Map<String, Object> map) {
+            return gson.toJson(map);
+        }
+
         public static String decodeJsonToString(JsonObject jsonObject) {
             return gson.toJson(jsonObject);
         }
@@ -77,6 +84,11 @@ public class Utils {
         public static JsonObject encodeStringToJson(String jsonString) {
             return gson.fromJson(jsonString, JsonObject.class);
         }
+
+        public static String encodeStringToJson(Iterator<JsonElement> iterator) {
+            return gson.fromJson(iterator.next(), String.class);
+        }
+
     }
 
     public static String resourcePathBuilder(String file_path, String file_name)

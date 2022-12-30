@@ -1,5 +1,8 @@
 package com.sergio.ivillager;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.ParsedArgument;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
@@ -10,6 +13,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -41,9 +45,7 @@ import org.apache.logging.log4j.Logger;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.ServerChatEvent;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @NPCModElement.ModElement.Tag
 @Mod.EventBusSubscriber
@@ -114,7 +116,7 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     @SubscribeEvent
     public void onCommandEvent(CommandEvent event) throws  Exception {
-        LOGGER.warn("received command event");
+        LOGGER.warn("[SERVER] Received command event");
         LOGGER.info(event.getParseResults());
         ParseResults<CommandSource> result = event.getParseResults();
         Entity sender = result.getContext().getSource().getEntity();
@@ -126,69 +128,76 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     @SubscribeEvent
     public void onServerChat(ServerChatEvent event) throws Exception {
-        LOGGER.warn("received ServerChatEvent");
-        PlayerEntity player = event.getPlayer();
+        LOGGER.warn(String.format("[SERVER] Received ServerChatEvent from Player: %s", event.getPlayer().getName().getString()));
 
-        ArrayList<CustomEntity> nearestVillager =
-                NPCVillagerManager.getInstance().getNeareFacedVillager(player);
-        if (nearestVillager == null) return;
+        ServerPlayerEntity player = event.getPlayer();
         String userMsg  = event.getMessage().toString();
         if (userMsg.startsWith("<villager command>")) {
             event.setCanceled(true);
-            player.sendMessage(new StringTextComponent(String.format("<%s> %s", player.getName().getString(), userMsg)), player.getUUID());
-            userMsg = userMsg.replace("<villager command> ", "");
+            userMsg = userMsg.replace("<villager command>", "");
         } else {
+            // No need to process normal chat without a custom villager as target
             return;
         }
 
-        for (CustomEntity obj : nearestVillager) {
+        JsonObject userMsgJsonObject = Utils.JsonConverter.encodeStringToJson(userMsg);
 
-            obj.setIsTalkingToPlayer(player);
-            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
-            obj.setProcessingMessage(true);
+        // Retrieve target villager UUID list and the original message
+        JsonArray jsonArray = userMsgJsonObject.get("interacted").getAsJsonArray();
+        String originalMsg = userMsgJsonObject.get("msg").getAsString();
 
+        ITextComponent msg0 = new StringTextComponent(String.format("<%s> %s", player.getName().getString(), originalMsg));
+        player.sendMessage(msg0, player.getUUID());
+        broadcastToOtherPlayerInInteractiveRange(player, msg0);
+
+        // Build Iterator
+        Iterator<JsonElement> iterator = jsonArray.iterator();
+
+        // For every interacted villager, broadcast every response, client need to process the
+        // message and choose which to accept and which to abandon
+        while(iterator.hasNext()) {
+            String villagerUUID = Utils.JsonConverter.encodeStringToJson(iterator);
+            CustomEntity obj = NPCVillagerManager.getInstance().getEntityByUUID(villagerUUID);
+            interactWithEntity(player, originalMsg, obj);
+        }
+    }
+
+    private static void broadcastToOtherPlayerInInteractiveRange(ServerPlayerEntity player, ITextComponent msg) {
+        List<ServerPlayerEntity> s0 = player.server.getPlayerList().getPlayers();
+        for (ServerPlayerEntity obj : s0) {
+            if (obj.getId() != player.getId()) {
+                Vector3d playerPos = player.position();
+                Vector3d villagerPos = obj.position();
+                Vector3d playerToVillager = villagerPos.subtract(playerPos);
+                double distance = playerToVillager.length();
+                if (distance <= 6.0) {
+                    obj.sendMessage(msg, obj.getUUID());
+                }
+            }
+        }
+    }
+
+    private static void interactWithEntity(ServerPlayerEntity player, String originalMsg, CustomEntity obj) {
+        if (obj != null) {
             NetworkRequestManager.asyncInteractWithNode(player.getUUID(), Utils.TEST_NODE_ID,
-                    userMsg,
+                    originalMsg,
                     response -> {
+                        Map<String, Object> j0 = new HashMap<String, Object>();
+                        j0.put("from_entity", obj.getId());
+                        j0.put("to_entity", player.getId());
                         if (response != null) {
-                            ITextComponent nameString = new StringTextComponent(String.format("<%s>",
-                                    obj.getCustomName().getString()))
-                                    .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
-                            ITextComponent contentString = new StringTextComponent(response)
-                                    .setStyle(Style.EMPTY);
-
-                            TextComponent messageComponent = new TextComponent() {
-                                @Override
-                                public TextComponent plainCopy() {
-                                    return null;
-                                }
-                            };
-
-                            messageComponent.append(nameString);
-                            messageComponent.append(contentString);
-
-                            ITextComponent msg = new StringTextComponent(String.format("<villager response><%s> %s", obj.getCustomName().getString(), response));
-
-                            obj.getLookControl().setLookAt(obj.getIsTalkingToPlayer().position());
-
-                            player.sendMessage(msg, player.getUUID());
-
-                            if (response.startsWith("*") && response.endsWith("*")) {
-                                obj.eatAndDigestFood();
-                                obj.setJumping(true);
-                            }
-
-                            obj.playTalkSound();
+                            j0.put("code", 200);
+                            j0.put("msg", response.trim());
                         } else {
-                            // Send default error message to the client indicating some error occurs
-                            ITextComponent errorString = new StringTextComponent(Utils.ERROR_MESSAGE)
-                                    .setStyle(Style.EMPTY.withColor(TextFormatting.DARK_RED));
-                            player.sendMessage(errorString, UUID.randomUUID());
+                            j0.put("code", 0);
+                            j0.put("msg", Utils.ERROR_MESSAGE);
                         }
-                        obj.setProcessingMessage(false);
+
+                        ITextComponent msg = new StringTextComponent(String.format("<villager" +
+                                " response>%s", Utils.JsonConverter.encodeMapToJsonString(j0)));
+                        player.sendMessage(msg, player.getUUID());
+                        broadcastToOtherPlayerInInteractiveRange(player, msg);
                     });
-            // TODO: 多个 NPC 一起，只取第一个？
-            break;
         }
     }
 
@@ -227,7 +236,7 @@ public class NPCVillager extends NPCModElement.ModElement {
         private Boolean isProcessingMessage = false;
 
         private String customSkin = "villager_0";
-
+        private TextFormatting customNameColor = TextFormatting.WHITE;
 
         public CustomEntity(FMLPlayMessages.SpawnEntity packet, World world) {
             this(entity, world);
@@ -308,6 +317,14 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void setProcessingMessage(Boolean processingMessage) {
             isProcessingMessage = processingMessage;
+        }
+
+        public TextFormatting getCustomNameColor() {
+            return customNameColor;
+        }
+
+        public void setCustomNameColor(TextFormatting customNameColor) {
+            this.customNameColor = customNameColor;
         }
     }
 }

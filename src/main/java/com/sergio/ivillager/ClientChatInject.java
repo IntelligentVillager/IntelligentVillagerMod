@@ -1,8 +1,11 @@
 package com.sergio.ivillager;
 
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.sergio.ivillager.NPCVillager.CustomEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
@@ -18,8 +21,7 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Mod.EventBusSubscriber
 public class ClientChatInject {
@@ -31,29 +33,45 @@ public class ClientChatInject {
     public static void onChatMessage(ClientChatEvent event) {
         // Get the message that was sent
         String message = event.getMessage();
-
-        // Do something with the message, such as logging it or performing some action based on its content
-        System.out.println("Received chat message: " + message);
-
-        // TODO: 检查是否在和 NPC 聊天，把部分position 判断逻辑放这里来，也可以增加更多的session 判断，比如是否已经处于聊天状态
-        // TODO: 把 onServerChat 的里部分 position 的信息直接在这里判断，包括 NPC 的位置（甚至是 NPC 的ID），然后打包到message 里直接发给服务端
-        // TODO: 服务端就可以减少部分操作了，毕竟这也需要计算的
-
         if (message.startsWith("/")) {
         } else {
-            List<Entity> nearbyEntities = getNearbyEntities(getCurrentPlayer(),
-                    getCurrentPlayer().getEntity().level, 5.0);
+            PlayerEntity player = getCurrentPlayer();
+            ArrayList<CustomEntity> nearestVillager =
+                    getNeareFacedVillager(player, getNearbyEntities(player,
+                            player.getEntity().level, 6.0));
 
-            // change event
-            String modifiedMessage = String.format("<villager command> %s", message);
-            event.setMessage(modifiedMessage);
-            event.setCanceled(false);
+            if (nearestVillager.size() != 0) {
+
+                // If no custom villager is interacted, it means the message is a normal
+                // broadcast message, no need to capture and reproduce
+
+                Map<String, Object> j0 = new HashMap<String, Object>();
+                ArrayList<String> interactVillagerIDs = new ArrayList<String>();
+                for (CustomEntity obj : nearestVillager) {
+                    interactVillagerIDs.add(obj.getStringUUID());
+
+                    // Set the status on the client side
+                    // TODO: Status maintainence
+                    obj.setIsTalkingToPlayer(player);
+                    obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+                    obj.setProcessingMessage(true);
+                }
+                j0.put("interacted",interactVillagerIDs);
+                j0.put("msg",message);
+
+                // change event
+                String modifiedMessage = String.format("<villager command>%s", Utils.JsonConverter.encodeMapToJsonString(j0));
+
+                LOGGER.warn(String.format("[CLIENT] Sending message: %s", modifiedMessage));
+
+                event.setMessage(modifiedMessage);
+                event.setCanceled(false);
+            }
         }
-
     }
 
     @OnlyIn(Dist.CLIENT)
-    public ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
+    public static ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
         Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
@@ -69,7 +87,8 @@ public class ClientChatInject {
                 }
             }
         }
-        LOGGER.warn(String.format("%d villagers in client world instance, %d in interactive " +
+        LOGGER.warn(String.format("[CLIENT] %d villagers in client world instance, %d in " +
+                "interactive " +
                 "range", nearByEntities.size(),nearCustomVillagerList.size()));
 
         return nearCustomVillagerList;
@@ -89,48 +108,135 @@ public class ClientChatInject {
         return world.getEntities(player, boundingBox);
     }
 
+    @OnlyIn(Dist.CLIENT)
+    public static Boolean isPlayerEntitySelf(int entityID) {
+        return getCurrentPlayer().getId() == entityID;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static Boolean isEntityInPlayerInteractiveRange(Entity entity) {
+        List<Entity> n0 = getNearbyEntities(getCurrentPlayer(),
+                getCurrentPlayer().getEntity().level, 8.0);
+        if (n0.contains(entity)) {
+            return true;
+        }
+        return false;
+    }
+
     @SubscribeEvent
     @OnlyIn(Dist.CLIENT)
-    public void onClientReceivedChat(ClientChatReceivedEvent event) throws Exception {
-        System.out.println("FUCK!!!!");
-        System.out.println("Received chat received event " + event.getMessage());
-        // Get the message that was received
-        ITextComponent message = event.getMessage();
+    public void onClientReceivedChat(ClientChatReceivedEvent event){
+        LOGGER.warn(String.format("[CLIENT] Received message: %s from sender: %s",
+                event.getMessage().getString(), event.getSenderUUID().toString()));
 
-        String rawMsg = message.getString();
-        System.out.println("receive msg: " + message.getString());
-        if (rawMsg.contains("<villager command>")) {
+        try {
+            // Get the message that was received
+            ITextComponent message = event.getMessage();
 
-            // Modify the message
-            ITextComponent modifiedMessage = new StringTextComponent(rawMsg.replace("<villager command> ", ""));
+            String rawMsg = message.getString();
+            if (rawMsg.contains("<villager command>")) {
+                LOGGER.error("Exception message received (Message should not be received)");
+                // Server has already taken care of all the messages
+                event.setCanceled(true);
+            } else if (rawMsg.contains("<villager response>")) {
+                JsonObject rawMsgJsonObject =
+                        Utils.JsonConverter.encodeStringToJson(rawMsg.replace("<villager response>", ""));
 
-            // Set the modified message
-            event.setMessage(modifiedMessage);
-            event.setCanceled(false);
-        } else if (rawMsg.contains("<villager response>")) {
+                String originalMsg = rawMsgJsonObject.get("msg").getAsString();
+                int fromEntityID = rawMsgJsonObject.get("from_entity").getAsInt();
+                int toEntityID = rawMsgJsonObject.get("to_entity").getAsInt();
+                int code = rawMsgJsonObject.get("code").getAsInt();
 
-            String msg = rawMsg.replace("<villager response>", "");
-            String[] msgs = msg.split(">", 2);
+                if (code != 0) {
+                    Entity fromEntity = Minecraft.getInstance().level.getEntity(fromEntityID);
+                    Entity toEntity = Minecraft.getInstance().level.getEntity(toEntityID);
 
-            ITextComponent nameString = new StringTextComponent(String.format("%s>",
-                    msgs[0]))
-                    .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
-            ITextComponent contentString = new StringTextComponent(msgs[1])
-                    .setStyle(Style.EMPTY);
+                    if (abandonMessageOutsideRange(event, fromEntityID, toEntityID, fromEntity, toEntity)) return;
 
-            TextComponent messageComponent = new TextComponent() {
-                @Override
-                public TextComponent plainCopy() {
-                    return null;
+                    if (fromEntity instanceof CustomEntity) {
+                        CustomEntity f0 = (CustomEntity) fromEntity;
+
+                        controlVillagerLocally(originalMsg, toEntityID, f0);
+
+                        TextComponent messageComponent = getTextComponent(originalMsg, toEntity, f0);
+
+                        event.setMessage(messageComponent);
+                        event.setCanceled(false);
+                    } else {
+                        errorMSG(event, originalMsg, toEntityID);
+                    }
+                } else {
+                    // Error Message
+                    errorMSG(event, originalMsg, toEntityID);
                 }
-            };
-
-            messageComponent.append(nameString);
-            messageComponent.append(contentString);
-
-            event.setMessage(messageComponent);
-            event.setCanceled(false);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+            event.setCanceled(true);
+            e.printStackTrace();
         }
+    }
 
+    @OnlyIn(Dist.CLIENT)
+    private static boolean abandonMessageOutsideRange (ClientChatReceivedEvent event,
+                                                      int fromEntityID, int toEntityID, Entity fromEntity, Entity toEntity) {
+        if (fromEntityID != getCurrentPlayer().getId() && toEntityID != getCurrentPlayer().getId()) {
+            if (!isEntityInPlayerInteractiveRange(fromEntity) || !isEntityInPlayerInteractiveRange(toEntity)) {
+                event.setCanceled(true);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void errorMSG(ClientChatReceivedEvent event, String originalMsg, int toEntityID) {
+        if (!isPlayerEntitySelf(toEntityID)) {
+            return;
+        }
+        ITextComponent errorString =
+                new StringTextComponent(originalMsg).setStyle(Style.EMPTY.withColor(TextFormatting.DARK_RED));
+        event.setMessage(errorString);
+        event.setCanceled(false);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static TextComponent getTextComponent(String originalMsg, Entity toEntity, CustomEntity f0) {
+        ITextComponent nameString = new StringTextComponent(String.format("<%s>",
+                f0.getName().getString()))
+                .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
+
+        ITextComponent targetNameString = new StringTextComponent(String.format(
+                " @%s ",
+                toEntity.getName().getString()))
+                .setStyle(Style.EMPTY.withBold(true).withColor(TextFormatting.YELLOW));
+
+        ITextComponent contentString = new StringTextComponent(originalMsg)
+                .setStyle(Style.EMPTY);
+
+        TextComponent messageComponent = new TextComponent() {
+            @Override
+            public TextComponent plainCopy() {
+                return null;
+            }
+        };
+
+        messageComponent.append(nameString);
+        messageComponent.append(targetNameString);
+        messageComponent.append(contentString);
+        return messageComponent;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void controlVillagerLocally(String originalMsg, int toEntityID, CustomEntity f0) {
+        if (isPlayerEntitySelf(toEntityID)) {
+            f0.getLookControl().setLookAt(getCurrentPlayer().position());
+            if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
+                f0.eatAndDigestFood();
+                f0.setJumping(true);
+            }
+            f0.playTalkSound();
+            f0.setProcessingMessage(false);
+        }
     }
 }
