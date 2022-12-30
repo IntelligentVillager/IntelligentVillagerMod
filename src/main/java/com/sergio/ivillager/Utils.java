@@ -97,4 +97,37 @@ public class Utils {
                 "/%s", file_path, file_name);
     }
 
+    public static String nodeConfigBuilder(String name, String prompt){
+        String s0 = "{\n" +
+                "  \"node_config_id\": 207,\n" +
+                "  \"models\": [\n" +
+                "    {\n" +
+                "      \"model_id\": 206,\n" +
+                "      \"default_chat\": {\n" +
+                "        \"default_node\": \"%s\",\n" +
+                "        \"default_node_text\": \"Hey there! What's up!\",\n" +
+                "        \"default_user\": \"user\",\n" +
+                "        \"default_user_text\": \"Hey\"\n" +
+                "      },\n" +
+                "      \"prompts\": [\n" +
+                "       \"%s\"" +
+                "      ],\n" +
+                "      \"rounds\": 3,\n" +
+                "      \"params\": {\n" +
+                "        \"background\": \"$(background)\",\n" +
+                "        \"default_chat\": \"$(default_chat)\",\n" +
+                "        \"history_dialogue\": \"$(history_dialogue)\",\n" +
+                "        \"max_tokens\": 50,\n" +
+                "        \"node_emotion\": \"$(node_emotional)\",\n" +
+                "        \"prompt\": \"$(prompt)\",\n" +
+                "        \"strategy\": \"append\",\n" +
+                "        \"style\": \"arrogant\",\n" +
+                "        \"text\": \"$(text)\",\n" +
+                "        \"user_name\": \"$(user_name)\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ]";
+        return String.format(s0, name, prompt);
+    }
+
 }

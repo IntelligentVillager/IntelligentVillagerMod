@@ -244,10 +244,27 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     public static class NPCVillagerEntity extends NPCVillagerBaseEntity {
 
-        // TODO: Rename the entity to NPCVillagerEntity
+        // FINISHED: Rename the entity to NPCVillagerEntity
 
         private PlayerEntity isTalkingToPlayer = null;
         private static final DataParameter<String> CUSTOM_SKIN =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_BACKGROUND_INFO =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_NODE_ID =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_NODE_PUBLIC_ID =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_PROFESSION =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_VILLAGENAME = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
+        private static final DataParameter<String> CUSTOM_NAME_COLOR =
                 EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
 
         // When processing message, villager should look at the player, but after sending the
@@ -283,6 +300,12 @@ public class NPCVillager extends NPCModElement.ModElement {
         protected void defineSynchedData() {
             super.defineSynchedData();
             this.entityData.define(CUSTOM_SKIN,"villager_0");
+            this.entityData.define(CUSTOM_BACKGROUND_INFO,"");
+            this.entityData.define(CUSTOM_PROFESSION,"");
+            this.entityData.define(CUSTOM_VILLAGENAME, "");
+            this.entityData.define(CUSTOM_NAME_COLOR, TextFormatting.BLUE.getName());
+            this.entityData.define(CUSTOM_NODE_ID, "");
+            this.entityData.define(CUSTOM_NODE_PUBLIC_ID, "");
         }
 
         @Override
@@ -344,11 +367,51 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
 
         public TextFormatting getCustomNameColor() {
-            return customNameColor;
+            return TextFormatting.getByName(this.entityData.get(CUSTOM_NAME_COLOR));
         }
 
         public void setCustomNameColor(TextFormatting customNameColor) {
-            this.customNameColor = customNameColor;
+            this.entityData.set(CUSTOM_NAME_COLOR, customNameColor.getName());
+        }
+
+        public String getCustomBackgroundInfo() {
+            return this.entityData.get(CUSTOM_BACKGROUND_INFO);
+        }
+
+        public void setCustomBackgroundInfo(String backgroundInfo) {
+            this.entityData.set(CUSTOM_BACKGROUND_INFO, backgroundInfo);
+        }
+
+        public String getCustomProfession () {
+            return this.entityData.get(CUSTOM_PROFESSION);
+        }
+
+        public void setCustomProfession(String profession) {
+            this.entityData.set(CUSTOM_PROFESSION, profession);
+        }
+
+        public String getCustomVillagename () {
+            return this.entityData.get(CUSTOM_VILLAGENAME);
+        }
+
+        public void setCustomVillagename(String villageName) {
+            this.entityData.set(CUSTOM_VILLAGENAME, villageName);
+        }
+
+        public String getCustomNodeId () {
+            return this.entityData.get(CUSTOM_NODE_ID);
+        }
+
+        public void setCustomNodeId(String n0) {
+            this.entityData.set(CUSTOM_NODE_ID, n0);
+        }
+
+        public String getCustomNodePublicId () {
+            return this.entityData.get(CUSTOM_NODE_PUBLIC_ID);
+        }
+
+        public void setCustomNodePublicId(String n0) {
+            this.entityData.set(CUSTOM_NODE_PUBLIC_ID, n0);
         }
     }
 }

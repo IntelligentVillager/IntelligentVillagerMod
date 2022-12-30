@@ -11,7 +11,7 @@ public class Config {
 
     //FINISHED: The config file needs to be read locally and stored persistently, including ssotoken
     // and expiration time judgment, accesstoken and accesskey storage and judgment, worldview background information
-    // TODO: all villager entities and their character information should be stored in the world
+    // FINISHED: all villager entities and their character information should be stored in the world
     //  save data but not config
 
     public static ForgeConfigSpec COMMON_CONFIG;

@@ -20,7 +20,7 @@ public class NPCVillagerManager {
     private Map<Integer, VillagerData> villagersData;
 
     // Universal ssotoken
-    private String ssoToken;
+    private String ssoToken = null;
     private Map<UUID, String> accessToken = new HashMap<UUID, String>();
     private Map<UUID, String> accessKey = new HashMap<UUID, String>();;
     private String openAIAPIKey;

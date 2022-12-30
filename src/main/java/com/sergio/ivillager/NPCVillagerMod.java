@@ -112,18 +112,19 @@ public class NPCVillagerMod {
 //            LOGGER.info(String.format("[%s] Player %s has logged in.",
 //                    event.getPlayer().getStringUUID(),
 //                    event.getPlayer().getName().getString()));
+            if (NPCVillagerManager.getInstance().getSsoToken() != null) {
+                Map<String, String> accessKeyandToken =
+                        NetworkRequestManager.getAccessToken(NPCVillagerManager.getInstance().getSsoToken());
 
-            Map<String, String> accessKeyandToken =
-                    NetworkRequestManager.getAccessToken(NPCVillagerManager.getInstance().getSsoToken());
+                NPCVillagerManager.getInstance().setAccessKey(event.getPlayer().getUUID(), accessKeyandToken.get("key"));
+                NPCVillagerManager.getInstance().setAccessToken(event.getPlayer().getUUID(),
+                        accessKeyandToken.get("token"));
 
-            NPCVillagerManager.getInstance().setAccessKey(event.getPlayer().getUUID(), accessKeyandToken.get("key"));
-            NPCVillagerManager.getInstance().setAccessToken(event.getPlayer().getUUID(),
-                    accessKeyandToken.get("token"));
-
-            LOGGER.warn(String.format("[%s] Successfully generated Socrates ACCESS KEY:%s and \n " +
-                            "ACCESS TOKEN:%s for Player %s",
-                    event.getPlayer().getStringUUID(), accessKeyandToken.get(
-                    "key"),accessKeyandToken.get("token"), event.getPlayer().getName().getString()));
+                LOGGER.warn(String.format("[%s] Successfully generated Socrates ACCESS KEY:%s and \n " +
+                                "ACCESS TOKEN:%s for Player %s",
+                        event.getPlayer().getStringUUID(), accessKeyandToken.get(
+                                "key"), accessKeyandToken.get("token"), event.getPlayer().getName().getString()));
+            }
         }
 
         @SubscribeEvent
