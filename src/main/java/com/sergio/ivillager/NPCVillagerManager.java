@@ -1,15 +1,18 @@
 package com.sergio.ivillager;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.server.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.system.CallbackI;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 public class NPCVillagerManager {
@@ -18,6 +21,7 @@ public class NPCVillagerManager {
     private static NPCVillagerManager instance;
 
     private Map<Integer, VillagerData> villagersData;
+    private Map<String, BlockPos> villagesList;
 
     // Universal ssotoken
     private String ssoToken = null;
@@ -26,6 +30,7 @@ public class NPCVillagerManager {
     private String openAIAPIKey;
 
     private NPCVillagerManager() {
+        this.villagesList = new HashMap<>();
         this.villagersData = new HashMap<>();
     }
 
@@ -40,10 +45,63 @@ public class NPCVillagerManager {
         int id = villager.getId();
         if (!this.villagersData.containsKey(id)) {
             this.villagersData.put(id, new VillagerData(id, villager));
-            LOGGER.warn(String.format("[SERVER] Adding new NPC villager entity:[%s]",
-                    villager.getStringUUID()));
+
+            if (villager.getCustomVillagename().equals("")) {
+                String n0 = isEntityLocatedAtVillagesWithName(villager);
+                if (n0 != null) {
+                    villager.setCustomVillagename(n0);
+                }
+            } else {
+                setVillageNameWithVillager(villager);
+            }
+
+            LOGGER.warn(String.format("[SERVER] Adding new NPC villager entity:[%s] living in " +
+                            "Village: %s",
+                    villager.getStringUUID(), villager.getCustomVillagename()));
             LOGGER.warn(villager);
         }
+    }
+
+    public String isEntityLocatedAtVillagesWithName(NPCVillager.NPCVillagerEntity entity){
+        return this.isEntityLocatedAtVillagesWithName(entity, entity.blockPosition());
+    }
+
+    public String isEntityLocatedAtVillagesWithName(NPCVillager.NPCVillagerEntity entity, BlockPos blockPos){
+        StructureStart<?> structureAt =
+                ((ServerWorld) entity.level).structureFeatureManager().getStructureAt(blockPos, true,
+                        Structure.VILLAGE);
+        if (!structureAt.isValid()) {
+            return null;
+        }
+
+        BlockPos structureEntityAt = structureAt.getLocatePos();
+        for (String name : this.villagesList.keySet()) {
+            if (this.villagesList.get(name).closerThan(structureEntityAt, 5.0)) {
+                return name;
+            }
+        }
+
+        String n0 = Utils.randomVillageNameExclude(new ArrayList<>(this.villagesList.keySet()));
+        this.villagesList.put(n0, structureEntityAt);
+        return n0;
+    }
+
+    public void setVillageNameWithVillager(NPCVillager.NPCVillagerEntity entity){
+        String villageName = entity.getCustomVillagename();
+        if (this.villagesList.containsKey(villageName)) {
+            return;
+        }
+
+        StructureStart<?> structureAt =
+                ((ServerWorld) entity.level).structureFeatureManager().getStructureAt(entity.blockPosition(),
+                        true,
+                        Structure.VILLAGE);
+        if (!structureAt.isValid()) {
+            return;
+        }
+        BlockPos structureEntityAt = structureAt.getLocatePos();
+        this.villagesList.put(villageName, structureEntityAt);
+
     }
 
     public VillagerData getVillagerData(int id) {

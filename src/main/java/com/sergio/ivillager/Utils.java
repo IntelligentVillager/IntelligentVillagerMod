@@ -1,15 +1,12 @@
 package com.sergio.ivillager;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Random;
+import java.util.*;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
-
-import java.util.Map;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
@@ -19,6 +16,29 @@ public class Utils {
     public static final String ERROR_MESSAGE = "[OOPS] Intelligent Villager Mod seemed not " +
             "functioning " +
             "properly on this server, please contact the server operator for more support.";
+
+    public static String randomProfession() {
+        String[] professions = {"farmer", "librarian", "blacksmith", "carpenter", "herbalist"};
+        // Create a Random instance
+        Random random = new Random();
+
+        // Choose a random element from each array
+        int professionIndex = random.nextInt(professions.length);
+        String profession = professions[professionIndex];
+        return profession;
+    }
+
+    public static String randomVillageNameExclude(List<String> excluded) {
+        List<String> villages = Arrays.asList("Oakdale", "Meadowvale", "Riverstone", "Greenhaven", "Pineville",
+                "Maplewood", "Springfield", "Silverlake", "Sunflower Fields", "Blue Ridge", "Redwood Forest", "Valleyview", "Sunrise Meadows", "Golden Fields", "Rolling Hills", "Forest Glen", "Emberton", "Silver Stream", "Riverwalk", "Autumn Ridge", "Wildflower Plains", "Sunny Acres", "Meadow Brook", "Rustic Ridge", "Blue Moon", "Skyview", "Willow Creek", "Harvest Fields", "Red Rock", "Spring Creek", "Stonehenge", "Green Meadows", "Sunset Hills", "Golden Fields", "Misty Meadows", "Summer Crossing", "Misty Ridge", "Ivy Hill", "Wildflower Meadows", "Meadowview", "New Haven", "Sunflower Fields", "Sunrise Estates", "Emerald Forest", "Woodland Fields", "Meadowland", "Sunny Hill", "Greenfields", "Sunrise Ridge", "Wildflower Meadows", "Rolling Hills", "Stonebridge", "Ivy Hill", "Sunset Meadows", "Wildflower Plains", "Meadow Walk", "Wildflower Fields", "Sunny Hills", "Golden Meadows", "Sunny Ridge", "Wildflower Acres", "Meadowsweet", "Stonebridge", "Autumn Woods", "Misty Meadows", "Wildflower Hill", "Sunny Fields", "Meadow Brook", "Golden Fields", "Wildflower Meadows", "Sunny Acres", "Green Meadows", "Wildflower Hill", "Meadowview", "Riverwalk", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows", "Sunny Fields", "Wildflower Plains", "Sunny Hills", "Sunny Ridge", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows");
+        villages.removeAll(excluded);
+
+        if (villages.size() == 0) {
+            villages.add("New Village");
+        }
+
+        return villages.get(new Random().nextInt(villages.size()));
+    }
 
     public static class RandomNameGenerator {
 

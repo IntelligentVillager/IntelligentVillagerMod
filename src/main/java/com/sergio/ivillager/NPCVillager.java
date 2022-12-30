@@ -11,18 +11,21 @@ import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.merchant.villager.VillagerData;
-import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.entity.villager.VillagerType;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.*;
+import net.minecraft.world.gen.feature.structure.VillageStructure;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
+import net.minecraftforge.event.world.StructureSpawnListGatherEvent;
+import net.minecraft.world.gen.feature.structure.Structure;
+
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.fml.network.FMLPlayMessages;
@@ -84,6 +87,14 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     @SubscribeEvent
+    public void structureLoading(StructureSpawnListGatherEvent event) {
+        Structure<?> village = event.getStructure();
+        if (village instanceof VillageStructure) {
+            LOGGER.warn("[SERVER] Generating Village structure");
+        }
+    }
+
+    @SubscribeEvent
     public static void onLivingVisibilityEvent(LivingEvent.LivingVisibilityEvent event) {
         Entity entity = event.getEntityLiving();
         if (entity instanceof NPCVillagerEntity) {
@@ -103,17 +114,30 @@ public class NPCVillager extends NPCModElement.ModElement {
         if (entity instanceof VillagerEntity) {
             NPCVillagerEntity customVillager = (NPCVillagerEntity) NPCVillager.entity.create((World) event.getWorld());
             // set the custom villager's position to the village center
-            customVillager.setPos(entity.position().x + 1, entity.position().y,
-                    entity.position().z + 1);
-            // add the custom villager to the world
-            event.getWorld().addFreshEntity(customVillager);
 
-            // add the custom villager to singelton manager
-            NPCVillagerManager.getInstance().addVillager(customVillager);
+            if (customVillager != null) {
+                customVillager.setPos(entity.position().x + 1, entity.position().y,
+                            entity.position().z + 1);
 
-            if (Config.IS_REPLACING_ALL_VILLAGERS.get()) {
-                // remove the original villager
-                entity.remove();
+                if (customVillager.getCustomVillagename().equals("")) {
+                    String n0 =
+                            NPCVillagerManager.getInstance().isEntityLocatedAtVillagesWithName(customVillager,
+                                    new BlockPos(entity.position().x + 1, entity.position().y, entity.position().z + 1));
+                    if (n0 != null) {
+                        customVillager.setCustomVillagename(n0);
+                    }
+                }
+
+                // add the custom villager to the world
+                event.getWorld().addFreshEntity(customVillager);
+
+                // add the custom villager to singelton manager
+                NPCVillagerManager.getInstance().addVillager(customVillager);
+
+                if (Config.IS_REPLACING_ALL_VILLAGERS.get()) {
+                    // remove the original villager
+                    entity.remove();
+                }
             }
         }
     }
@@ -301,7 +325,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             super.defineSynchedData();
             this.entityData.define(CUSTOM_SKIN,"villager_0");
             this.entityData.define(CUSTOM_BACKGROUND_INFO,"");
-            this.entityData.define(CUSTOM_PROFESSION,"");
+            this.entityData.define(CUSTOM_PROFESSION,Utils.randomProfession());
             this.entityData.define(CUSTOM_VILLAGENAME, "");
             this.entityData.define(CUSTOM_NAME_COLOR, TextFormatting.BLUE.getName());
             this.entityData.define(CUSTOM_NODE_ID, "");
