@@ -1,15 +1,6 @@
 package com.sergio.ivillager.config;
-import com.sergio.ivillager.Utils;
-import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
-import net.minecraft.util.ResourceLocation;
+
 import net.minecraftforge.common.ForgeConfigSpec;
-
-import java.io.*;
-import java.util.Properties;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,6 +17,7 @@ public class Config {
     public static ForgeConfigSpec COMMON_CONFIG;
     public static ForgeConfigSpec.ConfigValue<String> SOCRATES_EMAIL;
     public static ForgeConfigSpec.ConfigValue<String> SOCRATES_PWD;
+    public static ForgeConfigSpec.ConfigValue<String> OPENAI_API_KEY;
 
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
@@ -33,6 +25,8 @@ public class Config {
         SOCRATES_EMAIL = COMMON_BUILDER.comment("Socrates User Name (email address)").define("EMAIL"
                 , "");
         SOCRATES_PWD = COMMON_BUILDER.comment("Socrates User Password ").define("PWD"
+                , "");
+        OPENAI_API_KEY = COMMON_BUILDER.comment("OpenAI API key ").define("OPENAI_API_KEY"
                 , "");
 
         COMMON_BUILDER.pop();

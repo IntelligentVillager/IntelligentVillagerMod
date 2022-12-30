@@ -1,5 +1,10 @@
 package com.sergio.ivillager;
 
+import com.google.gson.JsonObject;
+import com.sergio.ivillager.Utils.JsonConverter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -7,13 +12,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-
-import com.google.gson.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import com.sergio.ivillager.Utils.JsonConverter;
 
 public class NetworkRequestManager {
 
@@ -254,6 +255,113 @@ public class NetworkRequestManager {
         LOGGER.info("Response : " + response.toString());
 
         return response.toString();
+    }
+
+
+    public static String randomProfession() {
+        String[] professions = {"farmer", "librarian", "blacksmith", "carpenter", "herbalist"};
+        // Create a Random instance
+        Random random = new Random();
+
+        // Choose a random element from each array
+        int professionIndex = random.nextInt(professions.length);
+        String profession = professions[professionIndex];
+        return profession;
+    }
+
+    public static String randomVillageName() {
+        String[] villages = {"Oakdale", "Meadowvale", "Riverstone", "Greenhaven", "Pineville", "Maplewood", "Springfield", "Silverlake", "Sunflower Fields", "Blue Ridge", "Redwood Forest", "Valleyview", "Sunrise Meadows", "Golden Fields", "Rolling Hills", "Forest Glen", "Emberton", "Silver Stream", "Riverwalk", "Autumn Ridge", "Wildflower Plains", "Sunny Acres", "Meadow Brook", "Rustic Ridge", "Blue Moon", "Skyview", "Willow Creek", "Harvest Fields", "Red Rock", "Spring Creek", "Stonehenge", "Green Meadows", "Sunset Hills", "Golden Fields", "Misty Meadows", "Summer Crossing", "Misty Ridge", "Ivy Hill", "Wildflower Meadows", "Meadowview", "New Haven", "Sunflower Fields", "Sunrise Estates", "Emerald Forest", "Woodland Fields", "Meadowland", "Sunny Hill", "Greenfields", "Sunrise Ridge", "Wildflower Meadows", "Rolling Hills", "Stonebridge", "Ivy Hill", "Sunset Meadows", "Wildflower Plains", "Meadow Walk", "Wildflower Fields", "Sunny Hills", "Golden Meadows", "Sunny Ridge", "Wildflower Acres", "Meadowsweet", "Stonebridge", "Autumn Woods", "Misty Meadows", "Wildflower Hill", "Sunny Fields", "Meadow Brook", "Golden Fields", "Wildflower Meadows", "Sunny Acres", "Green Meadows", "Wildflower Hill", "Meadowview", "Riverwalk", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows", "Sunny Fields", "Wildflower Plains", "Sunny Hills", "Sunny Ridge", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows"};
+        // Create a Random instance
+        Random random = new Random();
+
+        // Choose a random element from each array
+        int villageIndex = random.nextInt(villages.length);
+        String village = villages[villageIndex];
+        return village;
+    }
+
+    public static String[] generateVillager(String APIkey, String villageName, String profession) {
+        try {
+            // Set up the HTTP connection
+            URL url = new URL("https://api.openai.com/v1/completions");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Authorization", String.format("Bearer %s", APIkey));
+
+            // Set the request body
+
+            String[] prompts = {
+                    "Name and background story for a %s living in %s",
+                    "Name and background story for a %s living in %s, who has a unique hobby or pastime",
+                    "Name and background story for a %s living in %s, who has a tragic or difficult past",
+                    "Name and background story for a %s living in %s, who is the leader of their profession",
+                    "Name and background story for a %s living in %s, who has a strong relationship with another villager in the village",
+                    "Name and background story for a %s living in %s, who has a hidden talent or secret",
+                    "Name and background story for a %s living in %s, who has a unique appearance or physical characteristic",
+                    // 以下是 Minecraft 专属
+                    "Name and background story for a %s NPC living in a %s village in the Minecraft world",
+                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has an interesting or unique relationship with a player character",
+                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has a special role or importance in their village",
+                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has a memorable or noteworthy encounter with a player character",
+            };
+
+            Random random = new Random();
+            // Choose a random element from the array
+            int index = random.nextInt(prompts.length);
+            String selected = prompts[index];
+
+            // Format the selected element with the given string
+            String prompt = String.format(selected, profession, villageName);
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("prompt", prompt);
+            bodyMap.put("max_tokens", 1024);
+            bodyMap.put("model", "text-davinci-003");
+            bodyMap.put("temperature", 0.7);
+            bodyMap.put("top_p", 1);
+            bodyMap.put("frequency_penalty", 0);
+            bodyMap.put("presence_penalty", 0);
+
+            String body = JsonConverter.decodeJsonToString(JsonConverter.encodeMapToJson(bodyMap));
+
+//            String body = "{\"prompt\":\"" + prompt + ":\",\"max_tokens\":1024,\"temperature\":0.5}";
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(body);
+            wr.flush();
+            wr.close();
+
+            // Send the request and get the response
+            int responseCode = con.getResponseCode();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // Parse the response as a JSON object
+            String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
+
+            // Split the story into a name and background
+            String[] parts = story.split("\n", 2);
+            String name = parts[0];
+            name = name.replace("Name: ", "");
+            String background = parts[1];
+            background = background.replace("Background Story: ", "");
+
+            System.out.println("Name: " + name);
+            System.out.println("Background: " + background);
+            parts = new String[]{name, background};
+            return parts;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String[] result = {"", ""};
+        return result;
     }
 }
 
