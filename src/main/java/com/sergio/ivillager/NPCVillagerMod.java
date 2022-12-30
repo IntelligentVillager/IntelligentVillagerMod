@@ -137,6 +137,8 @@ public class NPCVillagerMod {
 
             String socrates_username = Config.SOCRATES_EMAIL.get().toString();
             String socrates_userpwd = Config.SOCRATES_PWD.get().toString();
+            String openAPAPIKey = Config.OPENAI_API_KEY.get().toString();
+            NPCVillagerManager.getInstance().setOpenAIAPIKey(openAPAPIKey);
 
             if (socrates_username.equals("") || socrates_userpwd.equals("")) {
                 LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +

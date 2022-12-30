@@ -1,17 +1,16 @@
 package com.sergio.ivillager;
 
+import com.sergio.ivillager.NPCVillager.CustomEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.vector.Vector3d;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import com.sergio.ivillager.NPCVillager.CustomEntity;
-import org.apache.logging.log4j.Logger;
 
 
 public class NPCVillagerManager {
@@ -23,10 +22,9 @@ public class NPCVillagerManager {
 
     // Universal ssotoken
     private String ssoToken;
-
-
     private Map<UUID, String> accessToken = new HashMap<UUID, String>();
     private Map<UUID, String> accessKey = new HashMap<UUID, String>();;
+    private String openAIAPIKey;
 
     private NPCVillagerManager() {
         this.villagersData = new HashMap<>();
@@ -157,6 +155,14 @@ public class NPCVillagerManager {
 
     public void setAccessKey(UUID PlayerUUID, String accessKey) {
         this.accessKey.put(PlayerUUID, accessKey);
+    }
+
+    public void setOpenAIAPIKey(String apiKey) {
+        this.openAIAPIKey = apiKey;
+    }
+
+    public String getOpenAIAPIKey() {
+        return this.openAIAPIKey;
     }
 
     public Boolean isVerified(){
