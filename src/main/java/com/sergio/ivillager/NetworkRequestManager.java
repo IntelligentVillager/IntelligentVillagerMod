@@ -27,8 +27,11 @@ public class NetworkRequestManager {
     public enum URLs {
         AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
         ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),
+        CREATE_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/full"),
+        SET_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/node_config"),
         INTERACT_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/conversation" +
                 "?accessKey=%s&accessToken=%s");
+
 
         private final String url;
 
@@ -56,6 +59,10 @@ public class NetworkRequestManager {
             e.printStackTrace();
             return e.getMessage();
         }
+    }
+
+    public static String createNodeId(String name) {
+        return "";
     }
 
     public static Map<String, String> getAccessToken(String ssoToken)

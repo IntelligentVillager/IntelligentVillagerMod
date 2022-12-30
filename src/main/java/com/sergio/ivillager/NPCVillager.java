@@ -11,7 +11,12 @@ import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.merchant.villager.VillagerData;
+import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.villager.VillagerType;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.event.CommandEvent;
@@ -26,6 +31,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraft.network.datasync.DataSerializers;
 
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.World;
@@ -241,12 +247,14 @@ public class NPCVillager extends NPCModElement.ModElement {
         // TODO: Rename the entity to NPCVillagerEntity
 
         private PlayerEntity isTalkingToPlayer = null;
+        private static final DataParameter<String> CUSTOM_SKIN =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
 
         // When processing message, villager should look at the player, but after sending the
         // message the villager could continue look randomly
         private Boolean isProcessingMessage = false;
 
-        private String customSkin = "villager_0";
+//        private String customSkin = "villager_0";
         private TextFormatting customNameColor = TextFormatting.WHITE;
 
         public NPCVillagerEntity(FMLPlayMessages.SpawnEntity packet, World world) {
@@ -262,7 +270,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.getNavigation().setCanFloat(true);
             this.setCanPickUpLoot(true);
 
-            setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
+            this.setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
 
             // TODO: Name and personal background should be generated from GPT3 API instead of
             //  setting it manually
@@ -270,6 +278,11 @@ public class NPCVillager extends NPCModElement.ModElement {
             setCustomName(new StringTextComponent("Jobbs"));
 //            setCustomName(new StringTextComponent(Utils.RandomNameGenerator.generateName()));
             setCustomNameVisible(true);
+        }
+
+        protected void defineSynchedData() {
+            super.defineSynchedData();
+            this.entityData.define(CUSTOM_SKIN,"villager_0");
         }
 
         @Override
@@ -307,11 +320,11 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
 
         public String getCustomSkin() {
-            return customSkin;
+            return this.entityData.get(CUSTOM_SKIN);
         }
 
         public void setCustomSkin(String customSkin) {
-            this.customSkin = customSkin;
+            this.entityData.set(CUSTOM_SKIN, customSkin);
         }
 
         public PlayerEntity getIsTalkingToPlayer() {
