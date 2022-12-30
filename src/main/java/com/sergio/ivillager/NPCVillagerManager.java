@@ -74,10 +74,12 @@ public class NPCVillagerManager {
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
                 if (villager.getIsTalkingToPlayer() != null && villager.getIsTalkingToPlayer().getId() == player.getId()) {
-                    if (distance > 6 || playerLook.dot(playerToVillager) <= 0) {
-//                        LOGGER.warn(String.format("villager %s no longer talk to player %s",
-//                                villager.getCustomName().getString(),
-//                                player.getName().getString()));
+                    if (distance > 6.0 || playerLook.dot(playerToVillager) <= 0) {
+                        LOGGER.warn(String.format("[SERVER] Villager %s [%s] no longer talk to " +
+                                        "player " +
+                                        "%s",
+                                villager.getCustomName().getString(),villager.getStringUUID(),
+                                player.getName().getString()));
                         villager.setIsTalkingToPlayer(null);
                         villager.goalSelector.enableControlFlag(Goal.Flag.MOVE);
                     }

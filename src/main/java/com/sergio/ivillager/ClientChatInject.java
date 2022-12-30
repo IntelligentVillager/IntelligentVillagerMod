@@ -52,9 +52,9 @@ public class ClientChatInject {
 
                     // Set the status on the client side
                     // TODO: Status maintainence
-                    obj.setIsTalkingToPlayer(player);
-                    obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
-                    obj.setProcessingMessage(true);
+//                    obj.setIsTalkingToPlayer(player);
+//                    obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+//                    obj.setProcessingMessage(true);
                 }
                 j0.put("interacted",interactVillagerIDs);
                 j0.put("msg",message);
@@ -156,7 +156,7 @@ public class ClientChatInject {
                     if (fromEntity instanceof CustomEntity) {
                         CustomEntity f0 = (CustomEntity) fromEntity;
 
-                        controlVillagerLocally(originalMsg, toEntityID, f0);
+//                        controlVillagerLocally(originalMsg, toEntityID, f0);
 
                         TextComponent messageComponent = getTextComponent(originalMsg, toEntity, f0);
 
@@ -220,23 +220,22 @@ public class ClientChatInject {
                 return null;
             }
         };
-
         messageComponent.append(nameString);
         messageComponent.append(targetNameString);
         messageComponent.append(contentString);
         return messageComponent;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private static void controlVillagerLocally(String originalMsg, int toEntityID, CustomEntity f0) {
-        if (isPlayerEntitySelf(toEntityID)) {
-            f0.getLookControl().setLookAt(getCurrentPlayer().position());
-            if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
-                f0.eatAndDigestFood();
-                f0.setJumping(true);
-            }
-            f0.playTalkSound();
-            f0.setProcessingMessage(false);
-        }
-    }
+//    @OnlyIn(Dist.CLIENT)
+//    private static void controlVillagerLocally(String originalMsg, int toEntityID, CustomEntity f0) {
+//        if (isPlayerEntitySelf(toEntityID)) {
+//            f0.getLookControl().setLookAt(getCurrentPlayer().position());
+//            if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
+//                f0.eatAndDigestFood();
+//                f0.setJumping(true);
+//            }
+//            f0.playTalkSound();
+//            f0.setProcessingMessage(false);
+//        }
+//    }
 }

@@ -192,11 +192,7 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
 
     @Nullable
     protected SoundEvent getAmbientSound() {
-        if (this.isSleeping()) {
-            return null;
-        } else {
-            return this.isTrading() ? SoundEvents.VILLAGER_TRADE : SoundEvents.VILLAGER_AMBIENT;
-        }
+        return null;
     }
 
     protected SoundEvent getHurtSound(DamageSource p_184601_1_) {

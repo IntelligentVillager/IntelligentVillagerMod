@@ -158,6 +158,11 @@ public class NPCVillager extends NPCModElement.ModElement {
         while(iterator.hasNext()) {
             String villagerUUID = Utils.JsonConverter.encodeStringToJson(iterator);
             CustomEntity obj = NPCVillagerManager.getInstance().getEntityByUUID(villagerUUID);
+
+            obj.setIsTalkingToPlayer(player);
+            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+            obj.setProcessingMessage(true);
+
             interactWithEntity(player, originalMsg, obj);
         }
     }
@@ -192,6 +197,14 @@ public class NPCVillager extends NPCModElement.ModElement {
                             j0.put("code", 0);
                             j0.put("msg", Utils.ERROR_MESSAGE);
                         }
+
+                        obj.getLookControl().setLookAt(player.position());
+                        if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
+                            obj.eatAndDigestFood();
+                            obj.setJumping(true);
+                        }
+                        obj.playTalkSound();
+                        obj.setProcessingMessage(false);
 
                         ITextComponent msg = new StringTextComponent(String.format("<villager" +
                                 " response>%s", Utils.JsonConverter.encodeMapToJsonString(j0)));

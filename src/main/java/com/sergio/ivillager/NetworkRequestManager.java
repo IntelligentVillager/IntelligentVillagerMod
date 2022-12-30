@@ -332,18 +332,10 @@ public class NetworkRequestManager {
             // Set the request body
 
             String[] prompts = {
-                    "Name and background story for a %s living in %s",
-                    "Name and background story for a %s living in %s, who has a unique hobby or pastime",
-                    "Name and background story for a %s living in %s, who has a tragic or difficult past",
-                    "Name and background story for a %s living in %s, who is the leader of their profession",
-                    "Name and background story for a %s living in %s, who has a strong relationship with another villager in the village",
-                    "Name and background story for a %s living in %s, who has a hidden talent or secret",
-                    "Name and background story for a %s living in %s, who has a unique appearance or physical characteristic",
-                    // 以下是 Minecraft 专属
-                    "Name and background story for a %s NPC living in a %s village in the Minecraft world",
-                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has an interesting or unique relationship with a player character",
-                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has a special role or importance in their village",
-                    "Name and background story for a %s NPC living in a %s village in the Minecraft world, who has a memorable or noteworthy encounter with a player character",
+                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world",
+                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has an interesting or unique relationship with a player character",
+                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has a special role or importance in their village",
+                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has a memorable or noteworthy encounter with a player character",
             };
 
             Random random = new Random();
