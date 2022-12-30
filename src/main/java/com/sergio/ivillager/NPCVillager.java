@@ -12,6 +12,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.math.BlockPos;
@@ -310,14 +311,12 @@ public class NPCVillager extends NPCModElement.ModElement {
 
             this.getNavigation().setCanFloat(true);
             this.setCanPickUpLoot(true);
-
-            this.setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
+            this.setCustomSkin(this.getCustomSkin());
 
             // TODO: Name and personal background should be generated from GPT3 API instead of
             //  setting it manually
-//            setCustomName(ITextComponent.nullToEmpty("Jobbs"));
-            setCustomName(new StringTextComponent("Jobbs"));
-//            setCustomName(new StringTextComponent(Utils.RandomNameGenerator.generateName()));
+
+            setCustomName(new StringTextComponent("-"));
             setCustomNameVisible(true);
         }
 
@@ -437,5 +436,46 @@ public class NPCVillager extends NPCModElement.ModElement {
         public void setCustomNodePublicId(String n0) {
             this.entityData.set(CUSTOM_NODE_PUBLIC_ID, n0);
         }
+
+        public void readAdditionalSaveData(CompoundNBT p_70037_1_) {
+            super.readAdditionalSaveData(p_70037_1_);
+            NPCVillager.LOGGER.info("[SERVER] LOAD Villager additional data");
+
+            if (p_70037_1_.getString("s_skin") != "") {
+                this.setCustomSkin(p_70037_1_.getString("s_skin"));
+            } else {
+                this.setCustomSkin(Utils.RandomSkinGenerator.generateSkin());
+            }
+
+            if (p_70037_1_.getString("s_name") != "") {
+                this.setCustomName(new StringTextComponent(p_70037_1_.getString("s_name")));
+            }
+
+            this.setCustomBackgroundInfo(p_70037_1_.getString("s_background"));
+
+            TextFormatting t0 = TextFormatting.getByName(p_70037_1_.getString("s_namecolor"));
+            if (t0 != null){
+                this.setCustomNameColor(t0);
+            }
+
+            this.setCustomVillagename(p_70037_1_.getString("s_villagename"));
+            this.setCustomNodeId(p_70037_1_.getString("s_nodeId"));
+            this.setCustomNodePublicId(p_70037_1_.getString("s_nodePublicId"));
+            this.setCustomProfession(p_70037_1_.getString("s_profession"));
+        }
+
+        public void addAdditionalSaveData(CompoundNBT p_213281_1_) {
+            super.addAdditionalSaveData(p_213281_1_);
+            NPCVillager.LOGGER.info("[SERVER] SAVE Villager additional data");
+            p_213281_1_.putString("s_name", this.getName().getString());
+            p_213281_1_.putString("s_villagename",this.getCustomVillagename());
+            p_213281_1_.putString("s_profession",this.getCustomProfession());
+            p_213281_1_.putString("s_background",this.getCustomBackgroundInfo());
+            p_213281_1_.putString("s_skin",this.getCustomSkin());
+            p_213281_1_.putString("s_namecolor",this.getCustomNameColor().getName());
+            p_213281_1_.putString("s_nodeId",this.getCustomNodeId());
+            p_213281_1_.putString("s_nodePublicId",this.getCustomNodePublicId());
+        }
+
     }
 }
