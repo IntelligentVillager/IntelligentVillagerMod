@@ -1,16 +1,15 @@
 package com.sergio.ivillager.goal;
 
-import com.sergio.ivillager.NPCVillagerManager;
 import net.minecraft.entity.ai.goal.Goal;
 
 import java.util.EnumSet;
-import com.sergio.ivillager.NPCVillager.CustomEntity;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 
 
 public class NPCVillagerTalkGoal extends Goal {
-    private final CustomEntity mob;
+    private final NPCVillagerEntity mob;
 
-    public NPCVillagerTalkGoal(CustomEntity entity) {
+    public NPCVillagerTalkGoal(NPCVillagerEntity entity) {
         this.mob = entity;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK));
     }

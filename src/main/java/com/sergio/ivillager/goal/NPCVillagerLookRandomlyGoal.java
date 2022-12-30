@@ -1,20 +1,18 @@
 package com.sergio.ivillager.goal;
 
 import com.sergio.ivillager.NPCVillager;
-import com.sergio.ivillager.renderer.NPCVillagerRenderer;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.vector.Vector3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.EnumSet;
-import java.util.Objects;
 
 public class NPCVillagerLookRandomlyGoal extends Goal {
 
     public static final Logger LOGGER = LogManager.getLogger(NPCVillagerLookRandomlyGoal.class);
 
-    private final NPCVillager.CustomEntity mob;
+    private final NPCVillager.NPCVillagerEntity mob;
     private double relX;
     private double relZ;
     private Vector3d lookTarget = Vector3d.ZERO;
@@ -23,7 +21,7 @@ public class NPCVillagerLookRandomlyGoal extends Goal {
 
     private int lookTime;
 
-    public NPCVillagerLookRandomlyGoal(NPCVillager.CustomEntity p_i1647_1_) {
+    public NPCVillagerLookRandomlyGoal(NPCVillager.NPCVillagerEntity p_i1647_1_) {
         this.mob = p_i1647_1_;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK));
     }

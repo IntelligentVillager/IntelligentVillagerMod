@@ -1,5 +1,6 @@
 package com.sergio.ivillager.renderer;
 
+import com.sergio.ivillager.NPCVillager;
 import com.sergio.ivillager.Utils;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -8,16 +9,16 @@ import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import com.sergio.ivillager.NPCVillager.CustomEntity;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @OnlyIn(Dist.CLIENT)
-public class NPCVillagerRenderer extends MobRenderer<CustomEntity, PlayerModel<CustomEntity>> {
+public class NPCVillagerRenderer extends MobRenderer<NPCVillager.NPCVillagerEntity, PlayerModel<NPCVillager.NPCVillagerEntity>> {
 
     public static final Logger LOGGER = LogManager.getLogger(NPCVillagerRenderer.class);
 
-    final CustomLayerRenderer<CustomEntity, PlayerModel<CustomEntity>> customLayerRenderer;
+    final CustomLayerRenderer<NPCVillagerEntity, PlayerModel<NPCVillagerEntity>> customLayerRenderer;
 
     private static final String[] IMAGE_NAMES = {
             "villager_0", "villager_1", "villager_2",
@@ -37,7 +38,7 @@ public class NPCVillagerRenderer extends MobRenderer<CustomEntity, PlayerModel<C
     }
 
     @Override
-    public ResourceLocation getTextureLocation(CustomEntity p_110775_1_) {
+    public ResourceLocation getTextureLocation(NPCVillagerEntity p_110775_1_) {
     // TODO: ADD emoji layer
 
         this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(

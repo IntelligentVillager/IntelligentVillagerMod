@@ -3,15 +3,16 @@ package com.sergio.ivillager.goal;
 import java.util.EnumSet;
 import javax.annotation.Nullable;
 
+import com.sergio.ivillager.NPCVillager;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.util.math.vector.Vector3d;
-import com.sergio.ivillager.NPCVillager.CustomEntity;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class NPCVillagerWalkingGoal extends Goal {
-    protected final CustomEntity mob;
+    protected final NPCVillager.NPCVillagerEntity mob;
     protected double wantedX;
     protected double wantedY;
     protected double wantedZ;
@@ -21,15 +22,15 @@ public class NPCVillagerWalkingGoal extends Goal {
     private boolean checkNoActionTime;
     public static final Logger LOGGER = LogManager.getLogger(NPCVillagerWalkingGoal.class);
 
-    public NPCVillagerWalkingGoal(CustomEntity p_i1648_1_, double p_i1648_2_) {
+    public NPCVillagerWalkingGoal(NPCVillager.NPCVillagerEntity p_i1648_1_, double p_i1648_2_) {
         this(p_i1648_1_, p_i1648_2_, 120);
     }
 
-    public NPCVillagerWalkingGoal(CustomEntity p_i45887_1_, double p_i45887_2_, int p_i45887_4_) {
+    public NPCVillagerWalkingGoal(NPCVillager.NPCVillagerEntity p_i45887_1_, double p_i45887_2_, int p_i45887_4_) {
         this(p_i45887_1_, p_i45887_2_, p_i45887_4_, true);
     }
 
-    public NPCVillagerWalkingGoal(CustomEntity p_i231550_1_, double p_i231550_2_, int p_i231550_4_, boolean p_i231550_5_) {
+    public NPCVillagerWalkingGoal(NPCVillagerEntity p_i231550_1_, double p_i231550_2_, int p_i231550_4_, boolean p_i231550_5_) {
         this.mob = p_i231550_1_;
         this.speedModifier = p_i231550_2_;
         this.interval = p_i231550_4_;

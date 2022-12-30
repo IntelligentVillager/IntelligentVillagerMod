@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.ParseResults;
-import com.mojang.brigadier.context.ParsedArgument;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
@@ -13,7 +12,6 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.event.CommandEvent;
@@ -54,10 +52,10 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     public static final Logger LOGGER = LogManager.getLogger(NPCVillager.class);
 
-    public static EntityType entity = (EntityType.Builder.<CustomEntity>of(CustomEntity::new,
+    public static EntityType entity = (EntityType.Builder.<NPCVillagerEntity>of(NPCVillagerEntity::new,
                     EntityClassification.MISC)
-            .setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(CustomEntity::new)
-            .sized(0.6f, 1.95f)).build("test_ainpc").setRegistryName("test_ainpc");
+            .setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(NPCVillagerEntity::new)
+            .sized(0.6f, 1.95f)).build("ainpc").setRegistryName("ainpc");
 
     public NPCVillager(NPCModElement instance) {
         super(instance, 1);
@@ -82,8 +80,8 @@ public class NPCVillager extends NPCModElement.ModElement {
     @SubscribeEvent
     public static void onLivingVisibilityEvent(LivingEvent.LivingVisibilityEvent event) {
         Entity entity = event.getEntityLiving();
-        if (entity instanceof CustomEntity) {
-            NPCVillagerManager.getInstance().addVillager((CustomEntity) entity);
+        if (entity instanceof NPCVillagerEntity) {
+            NPCVillagerManager.getInstance().addVillager((NPCVillagerEntity) entity);
         }
         if (entity instanceof PlayerEntity) {
             NPCVillagerManager.getInstance().updateVillagers((PlayerEntity) entity);
@@ -93,11 +91,11 @@ public class NPCVillager extends NPCModElement.ModElement {
     @SubscribeEvent
     public static void mobEvent(LivingSpawnEvent event) {
         Entity entity = event.getEntity();
-        if (entity instanceof CustomEntity) {
-            NPCVillagerManager.getInstance().addVillager((CustomEntity) entity);
+        if (entity instanceof NPCVillagerEntity) {
+            NPCVillagerManager.getInstance().addVillager((NPCVillagerEntity) entity);
         }
         if (entity instanceof VillagerEntity) {
-            CustomEntity customVillager = (CustomEntity) NPCVillager.entity.create((World) event.getWorld());
+            NPCVillagerEntity customVillager = (NPCVillagerEntity) NPCVillager.entity.create((World) event.getWorld());
             // set the custom villager's position to the village center
             customVillager.setPos(entity.position().x + 1, entity.position().y,
                     entity.position().z + 1);
@@ -157,7 +155,7 @@ public class NPCVillager extends NPCModElement.ModElement {
         // message and choose which to accept and which to abandon
         while(iterator.hasNext()) {
             String villagerUUID = Utils.JsonConverter.encodeStringToJson(iterator);
-            CustomEntity obj = NPCVillagerManager.getInstance().getEntityByUUID(villagerUUID);
+            NPCVillagerEntity obj = NPCVillagerManager.getInstance().getEntityByUUID(villagerUUID);
 
             obj.setIsTalkingToPlayer(player);
             obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
@@ -182,7 +180,7 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
     }
 
-    private static void interactWithEntity(ServerPlayerEntity player, String originalMsg, CustomEntity obj) {
+    private static void interactWithEntity(ServerPlayerEntity player, String originalMsg, NPCVillagerEntity obj) {
         if (obj != null) {
             NetworkRequestManager.asyncInteractWithNode(player.getUUID(), Utils.TEST_NODE_ID,
                     originalMsg,
@@ -238,7 +236,7 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
     }
 
-    public static class CustomEntity extends NPCVillagerBaseEntity {
+    public static class NPCVillagerEntity extends NPCVillagerBaseEntity {
 
         // TODO: Rename the entity to NPCVillagerEntity
 
@@ -251,11 +249,11 @@ public class NPCVillager extends NPCModElement.ModElement {
         private String customSkin = "villager_0";
         private TextFormatting customNameColor = TextFormatting.WHITE;
 
-        public CustomEntity(FMLPlayMessages.SpawnEntity packet, World world) {
+        public NPCVillagerEntity(FMLPlayMessages.SpawnEntity packet, World world) {
             this(entity, world);
         }
 
-        public CustomEntity(EntityType<CustomEntity> type, World world) {
+        public NPCVillagerEntity(EntityType<NPCVillagerEntity> type, World world) {
             super(type, world);
 
             setBaby(false);

@@ -1,11 +1,9 @@
 package com.sergio.ivillager;
 
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sergio.ivillager.NPCVillager.CustomEntity;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,7 +34,7 @@ public class ClientChatInject {
         if (message.startsWith("/")) {
         } else {
             PlayerEntity player = getCurrentPlayer();
-            ArrayList<CustomEntity> nearestVillager =
+            ArrayList<NPCVillager.NPCVillagerEntity> nearestVillager =
                     getNeareFacedVillager(player, getNearbyEntities(player,
                             player.getEntity().level, 6.0));
 
@@ -47,7 +45,7 @@ public class ClientChatInject {
 
                 Map<String, Object> j0 = new HashMap<String, Object>();
                 ArrayList<String> interactVillagerIDs = new ArrayList<String>();
-                for (CustomEntity obj : nearestVillager) {
+                for (NPCVillager.NPCVillagerEntity obj : nearestVillager) {
                     interactVillagerIDs.add(obj.getStringUUID());
 
                     // Set the status on the client side
@@ -71,19 +69,19 @@ public class ClientChatInject {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static ArrayList<CustomEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
+    public static ArrayList<NPCVillager.NPCVillagerEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
         Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
-        ArrayList<CustomEntity> nearCustomVillagerList = new ArrayList<>();
+        ArrayList<NPCVillager.NPCVillagerEntity> nearCustomVillagerList = new ArrayList<>();
 
         for (Entity data : nearByEntities) {
-            if (data instanceof CustomEntity) {
+            if (data instanceof NPCVillager.NPCVillagerEntity) {
                 Vector3d villagerPos = data.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
                 if (distance < 6 && playerLook.dot(playerToVillager) > 0) {
-                    nearCustomVillagerList.add((CustomEntity) data);
+                    nearCustomVillagerList.add((NPCVillagerEntity) data);
                 }
             }
         }
@@ -153,8 +151,8 @@ public class ClientChatInject {
 
                     if (abandonMessageOutsideRange(event, fromEntityID, toEntityID, fromEntity, toEntity)) return;
 
-                    if (fromEntity instanceof CustomEntity) {
-                        CustomEntity f0 = (CustomEntity) fromEntity;
+                    if (fromEntity instanceof NPCVillager.NPCVillagerEntity) {
+                        NPCVillagerEntity f0 = (NPCVillager.NPCVillagerEntity) fromEntity;
 
 //                        controlVillagerLocally(originalMsg, toEntityID, f0);
 
@@ -201,7 +199,7 @@ public class ClientChatInject {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static TextComponent getTextComponent(String originalMsg, Entity toEntity, CustomEntity f0) {
+    private static TextComponent getTextComponent(String originalMsg, Entity toEntity, NPCVillager.NPCVillagerEntity f0) {
         ITextComponent nameString = new StringTextComponent(String.format("<%s>",
                 f0.getName().getString()))
                 .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));
@@ -227,7 +225,7 @@ public class ClientChatInject {
     }
 
 //    @OnlyIn(Dist.CLIENT)
-//    private static void controlVillagerLocally(String originalMsg, int toEntityID, CustomEntity f0) {
+//    private static void controlVillagerLocally(String originalMsg, int toEntityID, NPCVillagerEntity f0) {
 //        if (isPlayerEntitySelf(toEntityID)) {
 //            f0.getLookControl().setLookAt(getCurrentPlayer().position());
 //            if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
