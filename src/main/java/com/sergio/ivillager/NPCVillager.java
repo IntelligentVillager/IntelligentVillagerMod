@@ -60,7 +60,6 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     public NPCVillager(NPCModElement instance) {
         super(instance, 1);
-//        FMLJavaModLoadingContext.get().getModEventBus().register(new NPCRenderer.ModelRegisterHandler());
         FMLJavaModLoadingContext.get().getModEventBus().register(new EntityAttributesRegisterHandler());
         MinecraftForge.EVENT_BUS.register(this);
     }
