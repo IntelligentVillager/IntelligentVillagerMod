@@ -2,6 +2,7 @@ package com.sergio.ivillager;
 
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.Utils.JsonConverter;
+import net.minecraft.util.Tuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,8 +62,57 @@ public class NetworkRequestManager {
         }
     }
 
-    public static String createNodeId(String name) {
-        return "";
+    public static Tuple<String, String> createNodeId(String name, String ssoToken) {
+        Tuple<String, String> result = null;
+        if (ssoToken == null) {
+            return result;
+        }
+        try {
+            Map<String, String> data = new HashMap<>();
+            data.put("x-sso-token", ssoToken);
+
+            String resultStr =
+                    NetworkRequestManager.sendPostRequestWithHeader(URLs.CREATE_NODE_URL.getUrl()
+                            , data, String.format("{\"name\":\"%s\", \"introduce\":\"%s\"," +
+                                    "\"level\":\"L2\"}", name, ""));
+            JsonObject resultJson =
+                    JsonConverter.encodeStringToJson(resultStr);
+            if (0 == resultJson.get("code").getAsInt()) {
+                result =
+                        new Tuple<>(resultJson.getAsJsonObject("data").get("public_id").getAsString(),
+                                resultJson.getAsJsonObject("data").get("id").getAsString());
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(e);
+            e.printStackTrace();
+            return result;
+        }
+    }
+
+    public static Boolean setNodePrompt(String name, String ssoToken, String nodeId,
+                                        String backgroundInfo) {
+        try {
+            Map<String, String> data = new HashMap<>();
+            data.put("x-sso-token", ssoToken);
+
+            String body = Utils.nodeConfigBuilder(name, backgroundInfo);
+
+            String resultStr =
+                    NetworkRequestManager.sendPostRequestWithHeader(String.format(
+                            URLs.SET_NODE_URL.getUrl(),nodeId)
+                            , data, body);
+            JsonObject resultJson =
+                    JsonConverter.encodeStringToJson(resultStr);
+            if (0 == resultJson.get("code").getAsInt()) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            LOGGER.error(e);
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static Map<String, String> getAccessToken(String ssoToken)
@@ -172,6 +222,44 @@ public class NetworkRequestManager {
                 return e.getMessage();
             }
         }).thenAccept(callback);
+    }
+
+    public static String sendPostRequestWithHeader(String url, Map<String, String> payload, String body) throws Exception {
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("User-Agent", USER_AGENT);
+        for (Map.Entry<String, String> entry : payload.entrySet()) {
+            con.setRequestProperty(entry.getKey(), entry.getValue());
+        }
+
+        con.setUseCaches(false);
+        con.setDoInput(true);
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(body);
+        wr.flush();
+        wr.close();
+
+        int responseCode = con.getResponseCode();
+        LOGGER.info("Response Code : " + responseCode);
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        con.disconnect();
+
+        LOGGER.info("Response : " + response.toString());
+
+        return response.toString();
     }
 
     public static String sendPostRequestWithHeader(String url, Map<String, String> payload) throws Exception {
@@ -304,29 +392,6 @@ public class NetworkRequestManager {
         return response.toString();
     }
 
-
-    public static String randomProfession() {
-        String[] professions = {"farmer", "librarian", "blacksmith", "carpenter", "herbalist"};
-        // Create a Random instance
-        Random random = new Random();
-
-        // Choose a random element from each array
-        int professionIndex = random.nextInt(professions.length);
-        String profession = professions[professionIndex];
-        return profession;
-    }
-
-    public static String randomVillageName() {
-        String[] villages = {"Oakdale", "Meadowvale", "Riverstone", "Greenhaven", "Pineville", "Maplewood", "Springfield", "Silverlake", "Sunflower Fields", "Blue Ridge", "Redwood Forest", "Valleyview", "Sunrise Meadows", "Golden Fields", "Rolling Hills", "Forest Glen", "Emberton", "Silver Stream", "Riverwalk", "Autumn Ridge", "Wildflower Plains", "Sunny Acres", "Meadow Brook", "Rustic Ridge", "Blue Moon", "Skyview", "Willow Creek", "Harvest Fields", "Red Rock", "Spring Creek", "Stonehenge", "Green Meadows", "Sunset Hills", "Golden Fields", "Misty Meadows", "Summer Crossing", "Misty Ridge", "Ivy Hill", "Wildflower Meadows", "Meadowview", "New Haven", "Sunflower Fields", "Sunrise Estates", "Emerald Forest", "Woodland Fields", "Meadowland", "Sunny Hill", "Greenfields", "Sunrise Ridge", "Wildflower Meadows", "Rolling Hills", "Stonebridge", "Ivy Hill", "Sunset Meadows", "Wildflower Plains", "Meadow Walk", "Wildflower Fields", "Sunny Hills", "Golden Meadows", "Sunny Ridge", "Wildflower Acres", "Meadowsweet", "Stonebridge", "Autumn Woods", "Misty Meadows", "Wildflower Hill", "Sunny Fields", "Meadow Brook", "Golden Fields", "Wildflower Meadows", "Sunny Acres", "Green Meadows", "Wildflower Hill", "Meadowview", "Riverwalk", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows", "Sunny Fields", "Wildflower Plains", "Sunny Hills", "Sunny Ridge", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows"};
-        // Create a Random instance
-        Random random = new Random();
-
-        // Choose a random element from each array
-        int villageIndex = random.nextInt(villages.length);
-        String village = villages[villageIndex];
-        return village;
-    }
-
     public static String[] generateVillager(String APIkey, String villageName, String profession) {
         try {
             // Set up the HTTP connection
@@ -363,8 +428,6 @@ public class NetworkRequestManager {
             bodyMap.put("presence_penalty", 0);
 
             String body = JsonConverter.decodeJsonToString(JsonConverter.encodeMapToJson(bodyMap));
-
-//            String body = "{\"prompt\":\"" + prompt + ":\",\"max_tokens\":1024,\"temperature\":0.5}";
             con.setDoOutput(true);
             DataOutputStream wr = new DataOutputStream(con.getOutputStream());
             wr.writeBytes(body);
