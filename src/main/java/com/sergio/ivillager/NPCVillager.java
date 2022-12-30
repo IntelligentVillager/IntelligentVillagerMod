@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.ParsedArgument;
+import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
@@ -96,17 +97,17 @@ public class NPCVillager extends NPCModElement.ModElement {
             NPCVillagerManager.getInstance().addVillager((CustomEntity) entity);
         }
         if (entity instanceof VillagerEntity) {
-            if (!(entity instanceof CustomEntity)) {
-                CustomEntity customVillager = (CustomEntity) NPCVillager.entity.create((World) event.getWorld());
-                // set the custom villager's position to the village center
-                customVillager.setPos(entity.position().x + 1, entity.position().y + 1,
-                        entity.position().z);
-                // add the custom villager to the world
-                event.getWorld().addFreshEntity(customVillager);
+            CustomEntity customVillager = (CustomEntity) NPCVillager.entity.create((World) event.getWorld());
+            // set the custom villager's position to the village center
+            customVillager.setPos(entity.position().x + 1, entity.position().y,
+                    entity.position().z + 1);
+            // add the custom villager to the world
+            event.getWorld().addFreshEntity(customVillager);
 
-                // add the custom villager to singelton manager
-                NPCVillagerManager.getInstance().addVillager(customVillager);
+            // add the custom villager to singelton manager
+            NPCVillagerManager.getInstance().addVillager(customVillager);
 
+            if (Config.IS_REPLACING_ALL_VILLAGERS.get()) {
                 // remove the original villager
                 entity.remove();
             }

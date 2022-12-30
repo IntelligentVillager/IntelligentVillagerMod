@@ -19,6 +19,8 @@ public class Config {
     public static ForgeConfigSpec.ConfigValue<String> SOCRATES_PWD;
     public static ForgeConfigSpec.ConfigValue<String> OPENAI_API_KEY;
 
+    public static ForgeConfigSpec.ConfigValue<Boolean> IS_REPLACING_ALL_VILLAGERS;
+
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
         COMMON_BUILDER.comment("General settings").push("general");
@@ -28,6 +30,10 @@ public class Config {
                 , "");
         OPENAI_API_KEY = COMMON_BUILDER.comment("OpenAI API key ").define("OPENAI_API_KEY"
                 , "");
+        IS_REPLACING_ALL_VILLAGERS =
+                COMMON_BUILDER.comment("Replacing all the original villagers or keep both").define(
+                "IS_REPLACING_ALL_VILLAGERS"
+                , true);
 
         COMMON_BUILDER.pop();
         COMMON_CONFIG = COMMON_BUILDER.build();
