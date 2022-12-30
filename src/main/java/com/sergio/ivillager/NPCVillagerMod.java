@@ -2,31 +2,27 @@ package com.sergio.ivillager;
 
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
-
-import net.minecraftforge.fml.network.simple.SimpleChannel;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
-
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.common.MinecraftForge;
-
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.item.Item;
-import net.minecraft.entity.EntityType;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.block.Block;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -54,6 +50,8 @@ public class NPCVillagerMod {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientLoad);
         MinecraftForge.EVENT_BUS.register(new NPCVillagerModFMLBusEvents(this));
     }
+
+
 
     private void init(FMLCommonSetupEvent event) {
         elements.getElements().forEach(element -> element.init(event));
