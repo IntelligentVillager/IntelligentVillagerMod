@@ -25,9 +25,6 @@ public class NPCVillagerRenderer extends MobRenderer<NPCVillager.NPCVillagerEnti
             "villager_3", "villager_4", "villager_5"
     };
 
-
-    // TODO: Move back to villager model
-
     public NPCVillagerRenderer(EntityRendererManager p_i50954_1_) {
         super(p_i50954_1_, new PlayerModel<>(0.0F, true), 0.5F);
         this.addLayer(new HeadLayer<>(this));
@@ -39,7 +36,6 @@ public class NPCVillagerRenderer extends MobRenderer<NPCVillager.NPCVillagerEnti
 
     @Override
     public ResourceLocation getTextureLocation(NPCVillagerEntity p_110775_1_) {
-    // TODO: ADD emoji layer
 
         this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(
                 "textures/entities", "sss.png")));

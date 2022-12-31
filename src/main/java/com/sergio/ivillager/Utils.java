@@ -44,7 +44,6 @@ public class Utils {
 
     public static class RandomNameGenerator {
 
-        // TODO: this method should be removed once GPT3 API completed
         private static final String[] FIRST_NAMES = {
                 "Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Gina", "Harry", "Ivy", "Jack", "Kate", "Linda", "Mike", "Nina", "Oscar", "Peggy", "Quincy", "Rita", "Sam", "Tina", "Ursula", "Violet", "Wendy", "Xander", "Yolanda", "Zach"
         };

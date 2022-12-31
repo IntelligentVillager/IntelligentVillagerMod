@@ -299,10 +299,6 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.getNavigation().setCanFloat(true);
             this.setCanPickUpLoot(true);
             this.setCustomSkin(this.getCustomSkin());
-
-            // TODO: Name and personal background should be generated from GPT3 API instead of
-            //  setting it manually
-
             setCustomName(new StringTextComponent("[Awakening...]"));
             setCustomNameVisible(true);
         }

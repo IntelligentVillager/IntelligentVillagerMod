@@ -20,11 +20,6 @@ import java.util.function.Consumer;
 
 public class NetworkRequestManager {
 
-
-    // TODO: create Node API integration
-    // TODO: set prompt API integration
-    // TODO: GPT3 API integration
-
     public enum URLs {
         AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
         ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),
@@ -464,7 +459,7 @@ public class NetworkRequestManager {
             String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
             LOGGER.info(story);
 
-            String background = story.trim();
+            String background = story.trim().replaceAll("\n", "");
 
             String[] parts = new String[]{name, background};
             return parts;
