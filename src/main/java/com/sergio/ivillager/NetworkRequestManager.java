@@ -98,15 +98,16 @@ public class NetworkRequestManager {
             String body = Utils.nodeConfigBuilder(name, backgroundInfo);
 
             String resultStr =
-                    NetworkRequestManager.sendPostRequestWithHeader(String.format(
+                    NetworkRequestManager.sendPutRequestWithHeader(String.format(
                             URLs.SET_NODE_URL.getUrl(),nodeId)
                             , data, body);
             JsonObject resultJson =
                     JsonConverter.encodeStringToJson(resultStr);
             if (0 == resultJson.get("code").getAsInt()) {
                 return true;
+            } else {
+                return false;
             }
-            return false;
         } catch (Exception e) {
             LOGGER.error(e);
             e.printStackTrace();
@@ -223,6 +224,47 @@ public class NetworkRequestManager {
         }).thenAccept(callback);
     }
 
+    public static String sendPutRequestWithHeader(String url, Map<String, String> payload,
+                                                 String body) throws Exception {
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        con.setRequestMethod("PUT");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("User-Agent", USER_AGENT);
+        for (Map.Entry<String, String> entry : payload.entrySet()) {
+            con.setRequestProperty(entry.getKey(), entry.getValue());
+        }
+
+        LOGGER.info(String.format("setNodePrompt Payload:%s", body));
+
+        con.setUseCaches(false);
+        con.setDoInput(true);
+        con.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(body);
+        wr.flush();
+        wr.close();
+
+        int responseCode = con.getResponseCode();
+        LOGGER.info("Response Code : " + responseCode);
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        con.disconnect();
+
+        LOGGER.info("Response : " + response.toString());
+
+        return response.toString();
+    }
+
     public static String sendPostRequestWithHeader(String url, Map<String, String> payload, String body) throws Exception {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -332,38 +374,6 @@ public class NetworkRequestManager {
         return response.toString();
     }
 
-    public static String sendPutRequest(String url, String payload) throws Exception {
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-        con.setRequestMethod("PUT");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("User-Agent", USER_AGENT);
-        con.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(payload);
-        wr.flush();
-        wr.close();
-
-        int responseCode = con.getResponseCode();
-        LOGGER.info("Response Code : " + responseCode);
-
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-        con.disconnect();
-
-        LOGGER.info("Response : " + response.toString());
-
-        return response.toString();
-    }
-
     public static String sendGetRequest(String url) throws Exception {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -400,13 +410,20 @@ public class NetworkRequestManager {
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("Authorization", String.format("Bearer %s", APIkey));
 
-            // Set the request body
+            String name = Utils.RandomNameGenerator.generateName();
 
             String[] prompts = {
-                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world",
-                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has an interesting or unique relationship with a player character",
-                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has a special role or importance in their village",
-                    "Name and background story for a %s NPC living in a village called %s in the Minecraft world, who has a memorable or noteworthy encounter with a player character",
+                    "Background story for a %s NPC called %s living in a village called" +
+                            " %s in the minecraft world:\n",
+                    "Background story for a %s NPC called %s living in a village called %s in the" +
+                            " Minecraft world, who has an interesting or unique relationship with " +
+                            "a player character:\n",
+                    "Background story for a %s NPC called %s living in a village called %s in the" +
+                            " Minecraft world, who has a special role or importance in their " +
+                            "village:\n",
+                    "Background story for a %s NPC called %s living in a village called %s in the" +
+                            " Minecraft world, who has a memorable or noteworthy encounter with a " +
+                            "player character:\n",
             };
 
             Random random = new Random();
@@ -415,7 +432,7 @@ public class NetworkRequestManager {
             String selected = prompts[index];
 
             // Format the selected element with the given string
-            String prompt = String.format(selected, profession, villageName);
+            String prompt = String.format(selected, profession, name, villageName);
 
             Map<String, Object> bodyMap = new HashMap<>();
             bodyMap.put("prompt", prompt);
@@ -445,20 +462,11 @@ public class NetworkRequestManager {
 
             // Parse the response as a JSON object
             String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
-
             LOGGER.info(story);
 
-            // Split the story into a name and background
-            String[] parts = story.split("Background Story: ", 2);
-            String name = parts[0].replace("\n", "").replace("Name: ", "").trim();
-            String background = parts[1].trim();
-//            String[] parts = story.split("\n", 2);
-//            String name = parts[0];
-//            name = name.replace("Name: ", "");
-//            String background = parts[1];
-//            background = background.replace("Background Story: ", "");
+            String background = story.trim();
 
-            parts = new String[]{name, background};
+            String[] parts = new String[]{name, background};
             return parts;
 
         } catch (Exception e) {

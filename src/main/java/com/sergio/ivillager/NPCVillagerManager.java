@@ -55,6 +55,10 @@ public class NPCVillagerManager {
                 setVillageNameWithVillager(villager);
             }
 
+            if (villager.getCustomNodeId().equals("")) {
+                villager.generateIntelligence();
+            }
+
             LOGGER.warn(String.format("[SERVER] Adding new NPC villager entity:[%s] living in " +
                             "Village: %s",
                     villager.getStringUUID(), villager.getCustomVillagename()));

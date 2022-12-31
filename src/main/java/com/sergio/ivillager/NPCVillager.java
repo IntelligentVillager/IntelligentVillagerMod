@@ -132,9 +132,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                     }
                 }
 
-                // BOOM!
-                customVillager.generateIntelligence();
-
                 // add the custom villager to the world
                 event.getWorld().addFreshEntity(customVillager);
 
@@ -306,13 +303,13 @@ public class NPCVillager extends NPCModElement.ModElement {
             // TODO: Name and personal background should be generated from GPT3 API instead of
             //  setting it manually
 
-            setCustomName(new StringTextComponent("-"));
+            setCustomName(new StringTextComponent("[Awakening...]"));
             setCustomNameVisible(true);
         }
 
         protected void defineSynchedData() {
             super.defineSynchedData();
-            this.entityData.define(CUSTOM_SKIN,"villager_0");
+            this.entityData.define(CUSTOM_SKIN,Utils.RandomSkinGenerator.generateSkin());
             this.entityData.define(CUSTOM_BACKGROUND_INFO,"");
             this.entityData.define(CUSTOM_PROFESSION,Utils.randomProfession());
             this.entityData.define(CUSTOM_VILLAGENAME, "");
@@ -426,8 +423,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void readAdditionalSaveData(CompoundNBT p_70037_1_) {
             super.readAdditionalSaveData(p_70037_1_);
-            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] LOAD Villager additional data " +
-                    "for %s"), this.getStringUUID(), this.getName().getString());
+            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] LOAD Villager additional data",
+                    this.getStringUUID()));
 
             if (p_70037_1_.getString("s_skin") != "") {
                 this.setCustomSkin(p_70037_1_.getString("s_skin"));
@@ -454,9 +451,13 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void addAdditionalSaveData(CompoundNBT p_213281_1_) {
             super.addAdditionalSaveData(p_213281_1_);
-            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] SAVE Villager additional data " +
-                    "for %s"), this.getStringUUID(), this.getName().getString());
-            p_213281_1_.putString("s_name", this.getName().getString());
+            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] SAVE Villager additional data",
+                    this.getStringUUID()));
+            if (this.getCustomName()!= null) {
+                p_213281_1_.putString("s_name", this.getCustomName().getString());
+            } else {
+                p_213281_1_.putString("s_name", "[Awakening...]");
+            }
             p_213281_1_.putString("s_villagename",this.getCustomVillagename());
             p_213281_1_.putString("s_profession",this.getCustomProfession());
             p_213281_1_.putString("s_background",this.getCustomBackgroundInfo());
@@ -473,6 +474,9 @@ public class NPCVillager extends NPCModElement.ModElement {
                     this.setCustomNodeId(response.get("s_nodeId"));
                     this.setCustomNodePublicId(response.get("s_nodePublicId"));
                     this.setCustomBackgroundInfo(response.get("s_background"));
+                } else {
+                    // Generate failed
+                    this.remove();
                 }
             });
         }

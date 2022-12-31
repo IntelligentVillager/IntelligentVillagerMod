@@ -31,7 +31,9 @@ public class Utils {
     public static String randomVillageNameExclude(List<String> excluded) {
         List<String> villages = Arrays.asList("Oakdale", "Meadowvale", "Riverstone", "Greenhaven", "Pineville",
                 "Maplewood", "Springfield", "Silverlake", "Sunflower Fields", "Blue Ridge", "Redwood Forest", "Valleyview", "Sunrise Meadows", "Golden Fields", "Rolling Hills", "Forest Glen", "Emberton", "Silver Stream", "Riverwalk", "Autumn Ridge", "Wildflower Plains", "Sunny Acres", "Meadow Brook", "Rustic Ridge", "Blue Moon", "Skyview", "Willow Creek", "Harvest Fields", "Red Rock", "Spring Creek", "Stonehenge", "Green Meadows", "Sunset Hills", "Golden Fields", "Misty Meadows", "Summer Crossing", "Misty Ridge", "Ivy Hill", "Wildflower Meadows", "Meadowview", "New Haven", "Sunflower Fields", "Sunrise Estates", "Emerald Forest", "Woodland Fields", "Meadowland", "Sunny Hill", "Greenfields", "Sunrise Ridge", "Wildflower Meadows", "Rolling Hills", "Stonebridge", "Ivy Hill", "Sunset Meadows", "Wildflower Plains", "Meadow Walk", "Wildflower Fields", "Sunny Hills", "Golden Meadows", "Sunny Ridge", "Wildflower Acres", "Meadowsweet", "Stonebridge", "Autumn Woods", "Misty Meadows", "Wildflower Hill", "Sunny Fields", "Meadow Brook", "Golden Fields", "Wildflower Meadows", "Sunny Acres", "Green Meadows", "Wildflower Hill", "Meadowview", "Riverwalk", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows", "Sunny Fields", "Wildflower Plains", "Sunny Hills", "Sunny Ridge", "Meadowland", "Meadow Brook", "Meadowview", "Wildflower Hill", "Wildflower Meadows");
-        villages.removeAll(excluded);
+        if (excluded != null) {
+            villages.removeAll(excluded);
+        }
 
         if (villages.size() == 0) {
             villages.add("New Village");
@@ -118,36 +120,10 @@ public class Utils {
     }
 
     public static String nodeConfigBuilder(String name, String prompt){
-        String s0 = "{\n" +
-                "  \"node_config_id\": 207,\n" +
-                "  \"models\": [\n" +
-                "    {\n" +
-                "      \"model_id\": 206,\n" +
-                "      \"default_chat\": {\n" +
-                "        \"default_node\": \"%s\",\n" +
-                "        \"default_node_text\": \"Hey there! What's up!\",\n" +
-                "        \"default_user\": \"user\",\n" +
-                "        \"default_user_text\": \"Hey\"\n" +
-                "      },\n" +
-                "      \"prompts\": [\n" +
-                "       \"%s\"" +
-                "      ],\n" +
-                "      \"rounds\": 3,\n" +
-                "      \"params\": {\n" +
-                "        \"background\": \"$(background)\",\n" +
-                "        \"default_chat\": \"$(default_chat)\",\n" +
-                "        \"history_dialogue\": \"$(history_dialogue)\",\n" +
-                "        \"max_tokens\": 50,\n" +
-                "        \"node_emotion\": \"$(node_emotional)\",\n" +
-                "        \"prompt\": \"$(prompt)\",\n" +
-                "        \"strategy\": \"append\",\n" +
-                "        \"style\": \"arrogant\",\n" +
-                "        \"text\": \"$(text)\",\n" +
-                "        \"user_name\": \"$(user_name)\"\n" +
-                "      }\n" +
-                "    }\n" +
-                "  ]";
-        return String.format(s0, name, prompt);
+        String p0 = prompt.replaceAll("\n","");
+        String s0 = "{\"node_config_id\": 207, \"models\": [{\"model_id\": 206,\"default_chat\": " +
+                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\",\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": [\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\",\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$(history_dialogue)\",\"max_tokens\": 50,\"node_emotion\": \"$(node_emotional)\",\"prompt\": \"$(prompt)\",\"strategy\": \"append\",\"style\": \"arrogant\",\"text\": \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+        return String.format(s0, name, p0);
     }
 
 }
