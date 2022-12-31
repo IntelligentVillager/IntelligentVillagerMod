@@ -15,6 +15,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
@@ -55,6 +56,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.ServerChatEvent;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 @NPCModElement.ModElement.Tag
 @Mod.EventBusSubscriber
@@ -128,6 +131,9 @@ public class NPCVillager extends NPCModElement.ModElement {
                         customVillager.setCustomVillagename(n0);
                     }
                 }
+
+                // BOOM!
+                customVillager.generateIntelligence();
 
                 // add the custom villager to the world
                 event.getWorld().addFreshEntity(customVillager);
@@ -213,7 +219,7 @@ public class NPCVillager extends NPCModElement.ModElement {
 
     private static void interactWithEntity(ServerPlayerEntity player, String originalMsg, NPCVillagerEntity obj) {
         if (obj != null) {
-            NetworkRequestManager.asyncInteractWithNode(player.getUUID(), Utils.TEST_NODE_ID,
+            NetworkRequestManager.asyncInteractWithNode(player.getUUID(), obj.getCustomNodePublicId(),
                     originalMsg,
                     response -> {
                         Map<String, Object> j0 = new HashMap<String, Object>();
@@ -268,35 +274,19 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     public static class NPCVillagerEntity extends NPCVillagerBaseEntity {
-
-        // FINISHED: Rename the entity to NPCVillagerEntity
-
         private PlayerEntity isTalkingToPlayer = null;
-        private static final DataParameter<String> CUSTOM_SKIN =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
-        private static final DataParameter<String> CUSTOM_BACKGROUND_INFO =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
-        private static final DataParameter<String> CUSTOM_NODE_ID =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
-        private static final DataParameter<String> CUSTOM_NODE_PUBLIC_ID =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
-        private static final DataParameter<String> CUSTOM_PROFESSION =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
+        private static final DataParameter<String> CUSTOM_SKIN = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_BACKGROUND_INFO = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_NODE_ID = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_NODE_PUBLIC_ID = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_PROFESSION = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
         private static final DataParameter<String> CUSTOM_VILLAGENAME = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
-
-        private static final DataParameter<String> CUSTOM_NAME_COLOR =
-                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_NAME_COLOR = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
 
         // When processing message, villager should look at the player, but after sending the
         // message the villager could continue look randomly
         private Boolean isProcessingMessage = false;
 
-//        private String customSkin = "villager_0";
         private TextFormatting customNameColor = TextFormatting.WHITE;
 
         public NPCVillagerEntity(FMLPlayMessages.SpawnEntity packet, World world) {
@@ -335,12 +325,9 @@ public class NPCVillager extends NPCModElement.ModElement {
         protected void registerGoals() {
             super.registerGoals();
 
-
             // TODO: Villager could hear other villagers talking when they are close (Using
             //  NPCVillagerManager) and reply
-
             // TODO: Villagers need to add a goal to talk to each other, randomly go to the nearby villagers to chat
-
             // TODO: Players can only receive messages from villagers chatting with each other if they are close to the villagers they are talking to
 
             this.goalSelector.addGoal(2, new NPCVillagerTalkGoal(this));
@@ -439,7 +426,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void readAdditionalSaveData(CompoundNBT p_70037_1_) {
             super.readAdditionalSaveData(p_70037_1_);
-            NPCVillager.LOGGER.info("[SERVER] LOAD Villager additional data");
+            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] LOAD Villager additional data " +
+                    "for %s"), this.getStringUUID(), this.getName().getString());
 
             if (p_70037_1_.getString("s_skin") != "") {
                 this.setCustomSkin(p_70037_1_.getString("s_skin"));
@@ -466,7 +454,8 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void addAdditionalSaveData(CompoundNBT p_213281_1_) {
             super.addAdditionalSaveData(p_213281_1_);
-            NPCVillager.LOGGER.info("[SERVER] SAVE Villager additional data");
+            NPCVillager.LOGGER.info(String.format("[SERVER] [%s] SAVE Villager additional data " +
+                    "for %s"), this.getStringUUID(), this.getName().getString());
             p_213281_1_.putString("s_name", this.getName().getString());
             p_213281_1_.putString("s_villagename",this.getCustomVillagename());
             p_213281_1_.putString("s_profession",this.getCustomProfession());
@@ -477,5 +466,70 @@ public class NPCVillager extends NPCModElement.ModElement {
             p_213281_1_.putString("s_nodePublicId",this.getCustomNodePublicId());
         }
 
+        public void generateIntelligence(){
+            this.asyncGenerateIntelligence(response -> {
+                if (response != null) {
+                    this.setCustomName(new StringTextComponent(response.get("s_name")));
+                    this.setCustomNodeId(response.get("s_nodeId"));
+                    this.setCustomNodePublicId(response.get("s_nodePublicId"));
+                    this.setCustomBackgroundInfo(response.get("s_background"));
+                }
+            });
+        }
+
+        public CompletableFuture<Void> asyncGenerateIntelligence(Consumer<Map<String, String>> callback) {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    String ssotoken =  NPCVillagerManager.getInstance().getSsoToken();
+                    if ((ssotoken == null) || ssotoken.equals("")) {
+                        LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +
+                                " CONFIG FILE " +
+                                "UNDER MINECRAFT FOLDER TO INITIATE INTELLIGENTVILLAGER MOD!");
+                        return null;
+                    }
+
+                    String customVillagename = this.getCustomVillagename();
+                    String customProfession = this.getCustomProfession();
+                    String[] p0 =
+                            NetworkRequestManager.generateVillager(Config.OPENAI_API_KEY.get(),
+                            customVillagename, customProfession);
+                    if (p0[0].equals("") || p0[1].equals("")) {
+                        LOGGER.error("[SERVER] Generate character name and background fail, check" +
+                                " error message");
+                        return null;
+                    }
+
+                    String customName = p0[0];
+                    String customBackground = p0[1];
+
+                    String[] p1 = NetworkRequestManager.createNodeId(customName, ssotoken);
+                    if (p1[0].equals("") || p1[1].equals("")) {
+                        LOGGER.error("[SERVER] Generate character node fail, check" +
+                                " error message");
+                        return null;
+                    }
+
+                    String nodePublicId = p1[0];
+                    String nodeId = p1[1];
+
+                    Boolean flag = NetworkRequestManager.setNodePrompt(customName, ssotoken,
+                            nodeId, customBackground);
+                    if (flag) {
+                        //Successfully create and set node
+                        Map<String, String> result = new HashMap<>();
+                        result.put("s_name",customName);
+                        result.put("s_background",customBackground);
+                        result.put("s_nodeId",nodeId);
+                        result.put("s_nodePublicId",nodePublicId);
+                        return result;
+                    }
+                    return null;
+                } catch (Exception e) {
+                    LOGGER.error(e);
+                    e.printStackTrace();
+                    return null;
+                }
+            }).thenAccept(callback);
+        }
     }
 }

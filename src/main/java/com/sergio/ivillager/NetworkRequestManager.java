@@ -62,8 +62,8 @@ public class NetworkRequestManager {
         }
     }
 
-    public static Tuple<String, String> createNodeId(String name, String ssoToken) {
-        Tuple<String, String> result = null;
+    public static String[] createNodeId(String name, String ssoToken) {
+        String[] result = {"",""};
         if (ssoToken == null) {
             return result;
         }
@@ -74,13 +74,12 @@ public class NetworkRequestManager {
             String resultStr =
                     NetworkRequestManager.sendPostRequestWithHeader(URLs.CREATE_NODE_URL.getUrl()
                             , data, String.format("{\"name\":\"%s\", \"introduce\":\"%s\"," +
-                                    "\"level\":\"L2\"}", name, ""));
+                                    "\"level\":\"L2\"}", name, "This is an auto-generated node."));
             JsonObject resultJson =
                     JsonConverter.encodeStringToJson(resultStr);
             if (0 == resultJson.get("code").getAsInt()) {
-                result =
-                        new Tuple<>(resultJson.getAsJsonObject("data").get("public_id").getAsString(),
-                                resultJson.getAsJsonObject("data").get("id").getAsString());
+                result[0] = resultJson.getAsJsonObject("data").get("public_id").getAsString();
+                result[1] = resultJson.getAsJsonObject("data").get("id").getAsString();
             }
             return result;
         } catch (Exception e) {
@@ -447,6 +446,8 @@ public class NetworkRequestManager {
             // Parse the response as a JSON object
             String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
 
+            LOGGER.info(story);
+
             // Split the story into a name and background
             String[] parts = story.split("\n", 2);
             String name = parts[0];
@@ -454,8 +455,6 @@ public class NetworkRequestManager {
             String background = parts[1];
             background = background.replace("Background Story: ", "");
 
-            System.out.println("Name: " + name);
-            System.out.println("Background: " + background);
             parts = new String[]{name, background};
             return parts;
 
