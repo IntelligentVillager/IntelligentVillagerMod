@@ -449,11 +449,14 @@ public class NetworkRequestManager {
             LOGGER.info(story);
 
             // Split the story into a name and background
-            String[] parts = story.split("\n", 2);
-            String name = parts[0];
-            name = name.replace("Name: ", "");
-            String background = parts[1];
-            background = background.replace("Background Story: ", "");
+            String[] parts = story.split("Background Story: ", 2);
+            String name = parts[0].replace("\n", "").replace("Name: ", "").trim();
+            String background = parts[1].trim();
+//            String[] parts = story.split("\n", 2);
+//            String name = parts[0];
+//            name = name.replace("Name: ", "");
+//            String background = parts[1];
+//            background = background.replace("Background Story: ", "");
 
             parts = new String[]{name, background};
             return parts;
