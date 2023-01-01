@@ -457,8 +457,7 @@ public class NetworkRequestManager {
             String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
             LOGGER.info(story);
 
-            String background =
-                    story.trim().replaceAll("\n", "").replaceAll("\"","\\\"").replaceAll("‘","'");
+            String background = story.trim();
             String[] parts = new String[]{name, background};
             return parts;
 

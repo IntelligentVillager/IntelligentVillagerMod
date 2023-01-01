@@ -155,18 +155,19 @@ public class Utils {
 
             if (optional_livingentities.isPresent()){
                 List<LivingEntity> l0 = optional_livingentities.get();
-                description.append(NPCVillagerLivingEntityInterpreter.interpret(l0, contextEntity));
+                description.append(NPCVillagerLivingEntityInterpreter.interpret(l0,
+                        contextEntity)).append("\n");
             }
 
             if (optional_villagers_in_town.isPresent()){
                 List<NPCVillagerEntity> l1 = optional_villagers_in_town.get();
-                description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity));
+                description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity)).append("\n");
             }
 
             if (optional_player_attack_history.isPresent()) {
                 Map<String, Long> m0 = optional_player_attack_history.get();
                 description.append(NPCVillagerPlayerAttackHistoryInterpreter.interpret(m0,
-                        contextEntity));
+                        contextEntity)).append("\n");
             }
 
             description.append("\nSecond, there is a dialogue between ")
@@ -178,7 +179,7 @@ public class Utils {
                     "Third, dialogue: \n" +
                     "user: (wave hands) Hey!\n")
                     .append(contextEntity.getName().getString())
-                    .append(": (talking) Hey! What's up?");
+                    .append(": (talking) Hey! What's up?\n");
             return description.toString();
         }
     }
