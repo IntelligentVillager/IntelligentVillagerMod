@@ -1,5 +1,6 @@
 package com.sergio.ivillager;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.DataResult;
@@ -8,12 +9,15 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.ai.brain.sensor.Sensor;
+import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.merchant.IReputationTracking;
 import net.minecraft.entity.merchant.IReputationType;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.merchant.villager.VillagerData;
+import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.entity.monster.WitchEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -65,6 +69,7 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
     private long lastGossipTime;
     private long lastGossipDecayTime;
     private int villagerXp;
+
     public NPCVillagerBaseEntity(EntityType<? extends NPCVillagerBaseEntity> p_i50183_1_, World p_i50183_2_) {
         super(p_i50183_1_, p_i50183_2_);
         ((GroundPathNavigator)this.getNavigation()).setCanOpenDoors(true);
@@ -82,16 +87,6 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
     }
 
     protected void customServerAiStep() {
-        this.level.getProfiler().push("villagerBrain");
-        this.level.getProfiler().pop();
-
-        if (!this.isNoAi() && this.random.nextInt(100) == 0) {
-            Raid raid = ((ServerWorld)this.level).getRaidAt(this.blockPosition());
-            if (raid != null && raid.isActive() && !raid.isOver()) {
-                this.level.broadcastEntityEvent(this, (byte)42);
-            }
-        }
-
         if (this.getVillagerData().getProfession() == VillagerProfession.NONE && this.isTrading()) {
             this.stopTrading();
         }
@@ -101,9 +96,6 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
 
     public void tick() {
         super.tick();
-        if (this.getUnhappyCounter() > 0) {
-            this.setUnhappyCounter(this.getUnhappyCounter() - 1);
-        }
 
         this.maybeDecayGossip();
     }
@@ -111,34 +103,17 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
     public ActionResultType mobInteract(PlayerEntity p_230254_1_, Hand p_230254_2_) {
         ItemStack itemstack = p_230254_1_.getItemInHand(p_230254_2_);
         if (itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading() && !this.isSleeping() && !p_230254_1_.isSecondaryUseActive()) {
-            if (this.isBaby()) {
-                this.setUnhappy();
+            boolean flag = this.getOffers().isEmpty();
+            if (p_230254_2_ == Hand.MAIN_HAND) {
+                p_230254_1_.awardStat(Stats.TALKED_TO_VILLAGER);
+            }
+            if (flag) {
                 return ActionResultType.sidedSuccess(this.level.isClientSide);
             } else {
-                boolean flag = this.getOffers().isEmpty();
-                if (p_230254_2_ == Hand.MAIN_HAND) {
-                    if (flag && !this.level.isClientSide) {
-                        this.setUnhappy();
-                    }
-
-                    p_230254_1_.awardStat(Stats.TALKED_TO_VILLAGER);
-                }
-
-                if (flag) {
-                    return ActionResultType.sidedSuccess(this.level.isClientSide);
-                } else {
-                    return ActionResultType.sidedSuccess(this.level.isClientSide);
-                }
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
         } else {
             return super.mobInteract(p_230254_1_, p_230254_2_);
-        }
-    }
-
-    private void setUnhappy() {
-        this.setUnhappyCounter(40);
-        if (!this.level.isClientSide()) {
-            this.playSound(SoundEvents.VILLAGER_NO, this.getSoundVolume(), this.getVoicePitch());
         }
     }
 

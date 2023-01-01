@@ -1,10 +1,13 @@
 package com.sergio.ivillager;
 
+import com.sergio.ivillager.ai.NPCVillagerCompatriotsSensor;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
 import net.minecraft.block.Block;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -21,10 +24,13 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 
@@ -37,6 +43,11 @@ public class NPCVillagerMod {
             NetworkRegistry.newSimpleChannel(new ResourceLocation(Utils.MOD_ID, Utils.MOD_ID),
             () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     public NPCModElement elements;
+    public static final MemoryModuleType<List<NPCVillager.NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
+            new MemoryModuleType<>(Optional.empty());
+
+    public static final SensorType<NPCVillagerCompatriotsSensor> COMPATRIOTS_SENSOR_TYPE =
+            new SensorType<>(NPCVillagerCompatriotsSensor::new);
 
     public NPCVillagerMod() {
         elements = new NPCModElement();
@@ -90,6 +101,20 @@ public class NPCVillagerMod {
     @SubscribeEvent
     public void registerSounds(RegistryEvent.Register<net.minecraft.util.SoundEvent> event) {
         elements.registerSounds(event);
+    }
+
+    @SubscribeEvent
+    public void registerMemoryModuleType(RegistryEvent.Register<MemoryModuleType<?>> event) {
+        LOGGER.info("register mod memory module type");
+        COMPATRIOTS_MEMORY_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_memory_type");
+        event.getRegistry().register(COMPATRIOTS_MEMORY_TYPE);
+    }
+
+    @SubscribeEvent
+    public void registerSensorType(RegistryEvent.Register<SensorType<?>> event) {
+        LOGGER.info("register mod sensor type");
+        COMPATRIOTS_SENSOR_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_sensor_type");
+        event.getRegistry().register(COMPATRIOTS_SENSOR_TYPE);
     }
 
     private static class NPCVillagerModFMLBusEvents {

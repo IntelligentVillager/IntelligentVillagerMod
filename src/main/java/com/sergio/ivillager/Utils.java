@@ -5,11 +5,17 @@ import java.util.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.brain.Brain;
+import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
+    public static final int ENTITYINTELLIGENCE_TICKING_INTERVAL = 200;
 
     public static final String TEST_NODE_ID = "9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b";
 
@@ -40,6 +46,89 @@ public class Utils {
         }
 
         return villages.get(new Random().nextInt(villages.size()));
+    }
+    public static class NPCVillagerCompatriotsInterpreter {
+        public static String interpret(List<NPCVillagerEntity> entities,
+                                       NPCVillagerEntity contextEntity) {
+            StringBuilder description = new StringBuilder();
+            if (entities.size() > 0) {
+                description.append("Other villager living in ").append(contextEntity.getCustomVillagename()).append(" :");
+                for (int i = 0; i < entities.size() - 1; i++) {
+                    description.append(entities.get(i).getCustomProfession()).append(" ").append(entities.get(i).getName().getString()).append(", ");
+                }
+                description.append(entities.get(entities.size() - 1).getCustomProfession())
+                        .append(" ")
+                        .append(entities.get(entities.size() - 1).getName().getString())
+                        .append(".");
+            } else {
+                description.append("No other villagers living in ").append(contextEntity.getCustomVillagename()).append(".");
+            }
+            return description.toString();
+        }
+    }
+
+    public static class NPCVillagerLivingEntityInterpreter {
+        public static String interpret(List<LivingEntity> entities, NPCVillagerEntity contextEntity)
+        {
+            StringBuilder description = new StringBuilder();
+            Map<String, Integer> otherCreatures = new HashMap<>();
+
+            if (entities.size() > 0) {
+                for (int i = 0; i < entities.size() ; i++) {
+                    if (entities.get(i) instanceof NPCVillagerEntity) {
+                        description.append("Villager ").append(entities.get(i).getName().getString());
+                        if (i < entities.size() - 1) description.append(",");
+                    } else if (entities.get(i) instanceof PlayerEntity) {
+                        description.append("Player ").append(entities.get(i).getName().getString());
+                        if (i < entities.size() - 1) description.append(",");
+                    } else {
+                        String s0 = entities.get(i).getName().getString();
+                        int count = otherCreatures.getOrDefault(s0, 0);
+                        otherCreatures.put(s0, count + 1);
+                    }
+                }
+                if (otherCreatures.keySet().size() > 0) {
+                    description.append(" and ");
+                    for(String creature_name: otherCreatures.keySet()) {
+                        description.append(String.valueOf(otherCreatures.get(creature_name)) + " " + creature_name + ", ");
+                    }
+                }
+                description.append("is around ")
+                        .append(contextEntity.getName().getString())
+                        .append(".");
+            } else {
+                description.append("No living creatures around ")
+                        .append(contextEntity.getName().getString())
+                        .append(".");
+            }
+            return description.toString();
+        }
+
+    }
+    public static class ContextBuilder {
+        public static String build(Brain<NPCVillagerEntity> brain,
+                                   NPCVillagerEntity contextEntity) {
+
+            StringBuilder description = new StringBuilder();
+            Optional<List<LivingEntity>> optional_livingentities =
+                    brain.getMemory(MemoryModuleType.LIVING_ENTITIES);
+            Optional<List<LivingEntity>> optional_livingentities_visible =
+                    brain.getMemory(MemoryModuleType.VISIBLE_LIVING_ENTITIES);
+            Optional<List<NPCVillagerEntity>> optional_villagers_in_town =
+                    brain.getMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
+
+            if (optional_livingentities.isPresent()){
+                List<LivingEntity> l0 = optional_livingentities.get();
+                description.append(NPCVillagerLivingEntityInterpreter.interpret(l0, contextEntity));
+            }
+
+            if (optional_villagers_in_town.isPresent()){
+                List<NPCVillagerEntity> l1 = optional_villagers_in_town.get();
+                description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity));
+            }
+
+            return description.toString();
+        }
     }
 
     public static class RandomNameGenerator {

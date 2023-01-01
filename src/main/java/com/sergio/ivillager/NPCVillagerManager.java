@@ -1,5 +1,6 @@
 package com.sergio.ivillager;
 
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.player.PlayerEntity;
@@ -41,7 +42,7 @@ public class NPCVillagerManager {
         return instance;
     }
 
-    public void addVillager(NPCVillager.NPCVillagerEntity villager) {
+    public void addVillager(NPCVillagerEntity villager) {
         int id = villager.getId();
         if (!this.villagersData.containsKey(id)) {
             this.villagersData.put(id, new VillagerData(id, villager));
@@ -66,11 +67,22 @@ public class NPCVillagerManager {
         }
     }
 
-    public String isEntityLocatedAtVillagesWithName(NPCVillager.NPCVillagerEntity entity){
+    public List<NPCVillagerEntity> findVillagersAtSameVillage(NPCVillagerEntity entity) {
+        String villageName = entity.getCustomVillagename();
+        List<NPCVillagerEntity> r0 = new ArrayList<>();
+        for (VillagerData data:this.villagersData.values()) {
+            if (data.getEntity().getCustomVillagename().equals(villageName) && !data.getEntity().getName().getString().equals("[Awakening...]")){
+                r0.add(data.getEntity());
+            }
+        }
+        return r0;
+    }
+
+    public String isEntityLocatedAtVillagesWithName(NPCVillagerEntity entity){
         return this.isEntityLocatedAtVillagesWithName(entity, entity.blockPosition());
     }
 
-    public String isEntityLocatedAtVillagesWithName(NPCVillager.NPCVillagerEntity entity, BlockPos blockPos){
+    public String isEntityLocatedAtVillagesWithName(NPCVillagerEntity entity, BlockPos blockPos){
         StructureStart<?> structureAt =
                 ((ServerWorld) entity.level).structureFeatureManager().getStructureAt(blockPos, true,
                         Structure.VILLAGE);
@@ -90,7 +102,7 @@ public class NPCVillagerManager {
         return n0;
     }
 
-    public void setVillageNameWithVillager(NPCVillager.NPCVillagerEntity entity){
+    public void setVillageNameWithVillager(NPCVillagerEntity entity){
         String villageName = entity.getCustomVillagename();
         if (this.villagesList.containsKey(villageName)) {
             return;
@@ -128,7 +140,7 @@ public class NPCVillagerManager {
         Vector3d playerLook = player.getViewVector(0.5f);
 
         for (VillagerData data : this.villagersData.values()) {
-            NPCVillager.NPCVillagerEntity villager = data.getEntity();
+            NPCVillagerEntity villager = data.getEntity();
             if (villager != null) {
 //                Vector3d villagerPos = villager.getPosition(0.5f);
                 Vector3d villagerPos = villager.position();
@@ -149,9 +161,9 @@ public class NPCVillagerManager {
         }
     }
 
-    public NPCVillager.NPCVillagerEntity getEntityByUUID (String EntityStringUUID) {
+    public NPCVillagerEntity getEntityByUUID (String EntityStringUUID) {
         for (VillagerData data : this.villagersData.values()) {
-            NPCVillager.NPCVillagerEntity villager = data.getEntity();
+            NPCVillagerEntity villager = data.getEntity();
             if (villager != null) {
                 if (villager.getStringUUID().equalsIgnoreCase(EntityStringUUID)) {
                     return villager;
@@ -161,17 +173,15 @@ public class NPCVillagerManager {
         return null;
     }
 
-    public ArrayList<NPCVillager.NPCVillagerEntity> getNeareFacedVillager(PlayerEntity player) {
-//        Vector3d playerPos = player.getPosition(0.5f);
+    public ArrayList<NPCVillagerEntity> getNeareFacedVillager(PlayerEntity player) {
         Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
-        ArrayList<NPCVillager.NPCVillagerEntity> nearCustomVillagerList = new ArrayList<>();
+        ArrayList<NPCVillagerEntity> nearCustomVillagerList = new ArrayList<>();
 
         for (VillagerData data : this.villagersData.values()) {
-            NPCVillager.NPCVillagerEntity villager = data.getEntity();
+            NPCVillagerEntity villager = data.getEntity();
             if (villager != null) {
-//                Vector3d villagerPos = villager.getPosition(0.5f);
                 Vector3d villagerPos = villager.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
@@ -186,6 +196,7 @@ public class NPCVillagerManager {
         return nearCustomVillagerList;
     }
 
+    //region GETTER/SETTER
     public String getSsoToken() {
         return ssoToken;
     }
@@ -227,6 +238,7 @@ public class NPCVillagerManager {
     public String getOpenAIAPIKey() {
         return this.openAIAPIKey;
     }
+    //endregion
 
     public Boolean isVerified(){
         if (this.ssoToken == null || this.accessKey == null || this.accessToken == null) {
@@ -244,9 +256,9 @@ public class NPCVillagerManager {
 
     public static class VillagerData {
         private int id;
-        private NPCVillager.NPCVillagerEntity entity;
+        private NPCVillagerEntity entity;
 
-        public VillagerData(int id, NPCVillager.NPCVillagerEntity entity) {
+        public VillagerData(int id, NPCVillagerEntity entity) {
             this.id = id;
             this.entity = entity;
         }
@@ -255,7 +267,7 @@ public class NPCVillagerManager {
             return id;
         }
 
-        public NPCVillager.NPCVillagerEntity getEntity() {
+        public NPCVillagerEntity getEntity() {
             return entity;
         }
     }
