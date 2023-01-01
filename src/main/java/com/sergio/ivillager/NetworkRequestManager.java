@@ -5,7 +5,6 @@ import com.sergio.ivillager.Utils.JsonConverter;
 import net.minecraft.util.Tuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -101,6 +100,7 @@ public class NetworkRequestManager {
             if (0 == resultJson.get("code").getAsInt()) {
                 return true;
             } else {
+                LOGGER.error(resultStr);
                 return false;
             }
         } catch (Exception e) {
@@ -254,8 +254,6 @@ public class NetworkRequestManager {
         }
         in.close();
         con.disconnect();
-
-        LOGGER.info("Response : " + response.toString());
 
         return response.toString();
     }
@@ -431,7 +429,7 @@ public class NetworkRequestManager {
 
             Map<String, Object> bodyMap = new HashMap<>();
             bodyMap.put("prompt", prompt);
-            bodyMap.put("max_tokens", 1024);
+            bodyMap.put("max_tokens", 200);
             bodyMap.put("model", "text-davinci-003");
             bodyMap.put("temperature", 0.7);
             bodyMap.put("top_p", 1);
@@ -459,8 +457,8 @@ public class NetworkRequestManager {
             String story = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray("choices").get(0).getAsJsonObject().get("text").getAsString();
             LOGGER.info(story);
 
-            String background = story.trim().replaceAll("\n", "");
-
+            String background =
+                    story.trim().replaceAll("\n", "").replaceAll("\"","\\\"").replaceAll("‘","'");
             String[] parts = new String[]{name, background};
             return parts;
 

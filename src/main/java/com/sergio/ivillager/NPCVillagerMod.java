@@ -1,5 +1,6 @@
 package com.sergio.ivillager;
 
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import com.sergio.ivillager.ai.NPCVillagerCompatriotsSensor;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
@@ -8,6 +9,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 
@@ -43,8 +46,11 @@ public class NPCVillagerMod {
             NetworkRegistry.newSimpleChannel(new ResourceLocation(Utils.MOD_ID, Utils.MOD_ID),
             () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     public NPCModElement elements;
-    public static final MemoryModuleType<List<NPCVillager.NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
-            new MemoryModuleType<>(Optional.empty());
+    public static final MemoryModuleType<List<NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
+            new MemoryModuleType<List<NPCVillagerEntity>>(Optional.empty());
+
+    public static final MemoryModuleType<Map<String, Long>> PLAYER_ATTACK_HISTORY =
+            new MemoryModuleType<Map<String, Long>>(Optional.empty());
 
     public static final SensorType<NPCVillagerCompatriotsSensor> COMPATRIOTS_SENSOR_TYPE =
             new SensorType<>(NPCVillagerCompatriotsSensor::new);
@@ -107,6 +113,8 @@ public class NPCVillagerMod {
     public void registerMemoryModuleType(RegistryEvent.Register<MemoryModuleType<?>> event) {
         LOGGER.info("register mod memory module type");
         COMPATRIOTS_MEMORY_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_memory_type");
+        PLAYER_ATTACK_HISTORY.setRegistryName(Utils.MOD_ID, "attacked_by_player_memory_type");
+        event.getRegistry().register(PLAYER_ATTACK_HISTORY);
         event.getRegistry().register(COMPATRIOTS_MEMORY_TYPE);
     }
 

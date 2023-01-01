@@ -18,7 +18,6 @@ import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 
 public class NPCVillagerCompatriotsSensor extends Sensor<LivingEntity> {
     protected void doTick(ServerWorld p_212872_1_, LivingEntity p_212872_2_) {
-        NPCVillager.LOGGER.info("NPCVillagerCompatriotsSensor ticking!");
         Brain<?> brain = p_212872_2_.getBrain();
         brain.setMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE,
                 NPCVillagerManager.getInstance().findVillagersAtSameVillage((NPCVillagerEntity)p_212872_2_));

@@ -9,6 +9,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
@@ -90,7 +93,7 @@ public class Utils {
                 if (otherCreatures.keySet().size() > 0) {
                     description.append(" and ");
                     for(String creature_name: otherCreatures.keySet()) {
-                        description.append(String.valueOf(otherCreatures.get(creature_name)) + " " + creature_name + ", ");
+                        description.append(String.valueOf(otherCreatures.get(creature_name))).append(" ").append(creature_name).append(", ");
                     }
                 }
                 description.append("is around ")
@@ -103,7 +106,38 @@ public class Utils {
             }
             return description.toString();
         }
+    }
 
+    public static class NPCVillagerPlayerAttackHistoryInterpreter {
+        public static String interpret(Map<String, Long> m0, NPCVillagerEntity contextEntity) {
+//            contextEntity.getServer().getPlayerList().getPlayer(UUID.fromString());
+            if (m0.isEmpty()) {
+                return contextEntity.getName().getString() + " is living peacefully with all the " +
+                        "players.";
+            } else {
+                Long current_time_stamp = System.currentTimeMillis();
+                StringBuilder description = new StringBuilder();
+                MinecraftServer s1 = contextEntity.getServer();
+                if (s1 == null) {
+                    return contextEntity.getName().getString() + " is living peacefully with all the " +
+                            "players.";
+                }
+                for (String uuid:m0.keySet()) {
+                    long delta = current_time_stamp - m0.get(uuid);
+                    if (delta < 600000) {
+                        ServerPlayerEntity p0 = s1.getPlayerList().getPlayer(UUID.fromString(uuid));
+                        description.append("Player ")
+                                .append(p0.getName().getString())
+                                .append(" has attacked ")
+                                .append(contextEntity.getName().getString())
+                                .append(" ")
+                                .append(delta/60000)
+                                .append(" minute ago.");
+                    }
+                }
+                return description.toString();
+            }
+        }
     }
     public static class ContextBuilder {
         public static String build(Brain<NPCVillagerEntity> brain,
@@ -116,6 +150,8 @@ public class Utils {
                     brain.getMemory(MemoryModuleType.VISIBLE_LIVING_ENTITIES);
             Optional<List<NPCVillagerEntity>> optional_villagers_in_town =
                     brain.getMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
+            Optional<Map<String, Long>> optional_player_attack_history =
+                    brain.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
 
             if (optional_livingentities.isPresent()){
                 List<LivingEntity> l0 = optional_livingentities.get();
@@ -127,6 +163,22 @@ public class Utils {
                 description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity));
             }
 
+            if (optional_player_attack_history.isPresent()) {
+                Map<String, Long> m0 = optional_player_attack_history.get();
+                description.append(NPCVillagerPlayerAttackHistoryInterpreter.interpret(m0,
+                        contextEntity));
+            }
+
+            description.append("\nSecond, there is a dialogue between ")
+                    .append(contextEntity.getName().getString())
+                    .append("and user. ")
+                    .append(contextEntity.getName().getString())
+                    .append(" should utter a sentence followed by an action wrapped by a pair of parentheses.\n" +
+                    "action:wave hands#walk forward#walk backward#run away#jump#talk#listen#think#throw an item\n" +
+                    "Third, dialogue: \n" +
+                    "user: (wave hands) Hey!\n")
+                    .append(contextEntity.getName().getString())
+                    .append(": (talking) Hey! What's up?");
             return description.toString();
         }
     }
@@ -209,8 +261,15 @@ public class Utils {
 
     public static String nodeConfigBuilder(String name, String prompt){
         String p0 = prompt.replaceAll("\n","");
-        String s0 = "{\"node_config_id\": 207, \"models\": [{\"model_id\": 206,\"default_chat\": " +
-                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\",\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": [\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\",\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$(history_dialogue)\",\"max_tokens\": 50,\"node_emotion\": \"$(node_emotional)\",\"prompt\": \"$(prompt)\",\"strategy\": \"append\",\"style\": \"arrogant\",\"text\": \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+        String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
+                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
+                "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
+                "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
+                "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
+                "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
+                "\"text\": \"$(text)\",\"mode\": \"default\"," +
+                "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
+                " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
         return String.format(s0, name, p0);
     }
 

@@ -30,7 +30,9 @@ import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.gen.feature.structure.VillageStructure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.CommandEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.StructureSpawnListGatherEvent;
@@ -168,6 +170,35 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     @SubscribeEvent
+    public void onLivingAttackEvent(LivingAttackEvent event) throws Exception {
+        if (event.getEntityLiving() instanceof NPCVillagerEntity) {
+            NPCVillagerEntity e0 = (NPCVillagerEntity) event.getEntityLiving();
+            if (event.getSource().msgId.equals("player")){
+                if (event.getSource().getEntity() instanceof ServerPlayerEntity) {
+                    LOGGER.warn(String.format("[SERVER] Villager %s is being attacked by: %s",
+                            e0.getName().getString(),
+                            event.getSource().getEntity().getName().getString()));
+
+                    Long current_time_stamp = System.currentTimeMillis();
+                    Brain<NPCVillagerEntity> b0 = e0.getBrain();
+                    Optional<Map<String, Long>> optional =
+                            b0.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
+                    if (optional.isPresent()) {
+                        Map<String, Long> m0 = optional.get();
+                        m0.put(event.getSource().getEntity().getStringUUID(), current_time_stamp);
+                        b0.setMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY, m0);
+                    } else {
+                        Map<String, Long> m0 = new HashMap<>();
+                        m0.put(event.getSource().getEntity().getStringUUID(), current_time_stamp);
+                        b0.setMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY, m0);
+                    }
+                    interactWithEntityWithAction((ServerPlayerEntity) event.getSource().getEntity(), "(beat you)", e0);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
     public void onServerChat(ServerChatEvent event) throws Exception {
         LOGGER.warn(String.format("[SERVER] Received ServerChatEvent from Player: %s", event.getPlayer().getName().getString()));
 
@@ -223,6 +254,31 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
     }
 
+    private static void interactWithEntityWithAction(ServerPlayerEntity player, String actionMsg,
+                                            NPCVillagerEntity obj) {
+        if (obj != null) {
+            NetworkRequestManager.asyncInteractWithNode(player.getUUID(), obj.getCustomNodePublicId(),
+                    actionMsg,
+                    response -> {
+                        Map<String, Object> j0 = new HashMap<String, Object>();
+                        j0.put("from_entity", obj.getId());
+                        j0.put("to_entity", player.getId());
+                        if (response != null) {
+                            j0.put("code", 200);
+                            j0.put("msg", response.trim());
+                        } else {
+                            j0.put("code", 0);
+                            j0.put("msg", Utils.ERROR_MESSAGE);
+                        }
+
+                        ITextComponent msg = new StringTextComponent(String.format("<villager" +
+                                " response>%s", Utils.JsonConverter.encodeMapToJsonString(j0)));
+                        player.sendMessage(msg, player.getUUID());
+                        broadcastToOtherPlayerInInteractiveRange(player, msg);
+                    });
+        }
+    }
+
     private static void interactWithEntity(ServerPlayerEntity player, String originalMsg, NPCVillagerEntity obj) {
         if (obj != null) {
             NetworkRequestManager.asyncInteractWithNode(player.getUUID(), obj.getCustomNodePublicId(),
@@ -269,10 +325,11 @@ public class NPCVillager extends NPCModElement.ModElement {
     private static class EntityAttributesRegisterHandler {
         @SubscribeEvent
         public void onEntityAttributeCreation(EntityAttributeCreationEvent event) {
+            LOGGER.info("[SERVER] Build attribute for villagers");
             AttributeModifierMap.MutableAttribute ammma = MobEntity.createMobAttributes();
             ammma = ammma.add(Attributes.MOVEMENT_SPEED, 0.4);
-            ammma = ammma.add(Attributes.MAX_HEALTH, 10);
-            ammma = ammma.add(Attributes.ARMOR, 0);
+            ammma = ammma.add(Attributes.MAX_HEALTH, 1000);
+            ammma = ammma.add(Attributes.ARMOR, 50);
             ammma = ammma.add(Attributes.ATTACK_DAMAGE, 3);
             ammma = ammma.add(Attributes.FOLLOW_RANGE, 16);
             event.put(entity, ammma.build());
@@ -291,11 +348,12 @@ public class NPCVillager extends NPCModElement.ModElement {
         private static final DataParameter<String> CUSTOM_PROFESSION = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
         private static final DataParameter<String> CUSTOM_VILLAGENAME = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
         private static final DataParameter<String> CUSTOM_NAME_COLOR = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<Boolean> HAS_AWAKEN =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.BOOLEAN);
 
         // When processing message, villager should look at the player, but after sending the
         // message the villager could continue look randomly
         private Boolean isProcessingMessage = false;
-        private Boolean hasAwaken = false;
         private TextFormatting customNameColor = TextFormatting.WHITE;
 
         // Refresh intelligence with latest context every 100 ticks by default
@@ -309,18 +367,13 @@ public class NPCVillager extends NPCModElement.ModElement {
                         MemoryModuleType.NEAREST_VISIBLE_WANTED_ITEM, MemoryModuleType.HURT_BY,
                         MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
                         MemoryModuleType.HEARD_BELL_TIME,
-                        MemoryModuleType.GOLEM_DETECTED_RECENTLY, NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
+                        MemoryModuleType.GOLEM_DETECTED_RECENTLY,
+                        NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE, NPCVillagerMod.PLAYER_ATTACK_HISTORY);
 
         private static final ImmutableList<SensorType<? extends Sensor<? super NPCVillagerEntity>>> SENSOR_TYPES
                 = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS
                 , SensorType.NEAREST_ITEMS, SensorType.HURT_BY, SensorType.VILLAGER_HOSTILES,
                 SensorType.GOLEM_DETECTED, NPCVillagerMod.COMPATRIOTS_SENSOR_TYPE);
-
-        public static final Map<MemoryModuleType<GlobalPos>, BiPredicate<NPCVillagerEntity, PointOfInterestType>> POI_MEMORIES = ImmutableMap.of(MemoryModuleType.HOME, (p_213769_0_, p_213769_1_) -> {
-            return p_213769_1_ == PointOfInterestType.HOME;
-        },MemoryModuleType.MEETING_POINT, (p_234546_0_, p_234546_1_) -> {
-            return p_234546_1_ == PointOfInterestType.MEETING;
-        });
 
         public NPCVillagerEntity(FMLPlayMessages.SpawnEntity packet, World world) {
             this(entity, world);
@@ -367,6 +420,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.entityData.define(CUSTOM_NODE_ID, "");
             this.entityData.define(CUSTOM_NODE_PUBLIC_ID, "");
             this.entityData.define(CUSTOM_CONTEXT_INFO, "");
+            this.entityData.define(HAS_AWAKEN, false);
         }
 
         protected void customServerAiStep() {
@@ -419,6 +473,14 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
 
         //region GETTER/SETTER for all custom data
+        public Boolean getHasAwaken() {
+            return this.entityData.get(HAS_AWAKEN);
+        }
+
+        public void setHasAwaken(Boolean flag) {
+            this.entityData.set(HAS_AWAKEN, flag);
+        }
+
         public String getCustomSkin() {
             return this.entityData.get(CUSTOM_SKIN);
         }
@@ -526,6 +588,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.setCustomNodePublicId(p_70037_1_.getString("s_nodePublicId"));
             this.setCustomProfession(p_70037_1_.getString("s_profession"));
             this.setCustomContext(p_70037_1_.getString("s_context"));
+            this.setHasAwaken(p_70037_1_.getBoolean("s_hasAwaken"));
         }
 
         public void addAdditionalSaveData(CompoundNBT p_213281_1_) {
@@ -545,16 +608,22 @@ public class NPCVillager extends NPCModElement.ModElement {
             p_213281_1_.putString("s_nodeId",this.getCustomNodeId());
             p_213281_1_.putString("s_nodePublicId",this.getCustomNodePublicId());
             p_213281_1_.putString("s_context", this.getCustomContext());
+            p_213281_1_.putBoolean("s_hasAwaken", this.getHasAwaken());
         }
 
         public void refreshIntelligence(){
-            //Called every tick
-            if (!hasAwaken) {return;}
+            if (!this.getHasAwaken()) {return;}
             String c0 = Utils.ContextBuilder.build(this.getBrain(), this);
-//            LOGGER.info(String.format("refreshIntelligence for villager: %s, updated context in " +
-//                    "mind: %s", this.getName().getString(),c0));
             this.setCustomContext(c0);
-            //TODO: update with the context
+
+            String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
+            if ((ssotoken == null) || ssotoken.equals("")) {
+                return;
+            }
+
+            NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
+                    this.getCustomNodeId(), String.format("%s\n%s",this.getCustomBackgroundInfo()
+                            , this.getCustomContext()));
         }
 
         public void generateIntelligence(){
@@ -564,7 +633,7 @@ public class NPCVillager extends NPCModElement.ModElement {
                     this.setCustomNodeId(response.get("s_nodeId"));
                     this.setCustomNodePublicId(response.get("s_nodePublicId"));
                     this.setCustomBackgroundInfo(response.get("s_background"));
-                    hasAwaken = true;
+                    this.setHasAwaken(true);
                 } else {
                     // Generate failed
                     this.remove();
