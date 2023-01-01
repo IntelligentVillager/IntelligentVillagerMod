@@ -1,8 +1,7 @@
 package com.sergio.ivillager;
 
-import java.util.*;
-
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.entity.LivingEntity;
@@ -15,6 +14,8 @@ import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
+
+import java.util.*;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
@@ -271,7 +272,18 @@ public class Utils {
                 "\"text\": \"$(text)\",\"mode\": \"default\"," +
                 "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
                 " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
-        return String.format(s0, name, p0);
+
+        String s1 = String.format(s0, name, "");
+        JsonObject bodyMap = JsonConverter.encodeStringToJson(s1);
+        JsonArray models = bodyMap.getAsJsonArray("models");
+        JsonObject model = models.get(0).getAsJsonObject();
+        JsonArray prompts = new JsonArray();
+        prompts.add(p0);
+        model.add("prompts", prompts);
+        models.set(0, model);
+        bodyMap.add("models", models);
+
+        return JsonConverter.decodeJsonToString(bodyMap);
     }
 
 }
