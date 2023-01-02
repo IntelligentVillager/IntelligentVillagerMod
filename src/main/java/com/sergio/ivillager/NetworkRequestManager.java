@@ -2,19 +2,16 @@ package com.sergio.ivillager;
 
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.Utils.JsonConverter;
-import net.minecraft.util.Tuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -338,20 +335,26 @@ public class NetworkRequestManager {
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         con.setRequestProperty("User-Agent", USER_AGENT);
 
         con.setUseCaches(false);
         con.setDoInput(true);
         con.setDoOutput(true);
-        // TODO: Don't support chinese body
-        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(payload);
-        wr.flush();
-        wr.close();
+        OutputStream outputStream = con.getOutputStream();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+        writer.write(payload);
+        writer.flush();
+        writer.close();
 
         int responseCode = con.getResponseCode();
         LOGGER.info("Response Code : " + responseCode);
+
+        if (responseCode == 405) {
+            return "He is awakening";
+        } else if (responseCode != 200) {
+            return "Something has gone wrong, please try again";
+        }
 
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
