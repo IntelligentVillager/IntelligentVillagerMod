@@ -180,11 +180,12 @@ public class Utils {
                     .append("and user. ")
                     .append(contextEntity.getName().getString())
                     .append(" should utter a sentence followed by an action wrapped by a pair of parentheses.\n" +
-                    "action:wave hands#walk forward#walk backward#run away#jump#talk#listen#think#throw an item\n" +
+                    "action:wave hands#walk forward#walk backward#run " +
+                            "away#jump#think#friendly pat#punch\n" +
                     "Third, dialogue: \n" +
-                    "user: (wave hands) Hey!\n")
+                    "user: (jump) Hey!\n")
                     .append(contextEntity.getName().getString())
-                    .append(": (talking) Hey! What's up?\n");
+                    .append(": (wave hands) Hey! What's up?\n");
             return description.toString();
         }
     }

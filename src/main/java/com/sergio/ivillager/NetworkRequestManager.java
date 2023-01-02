@@ -232,7 +232,7 @@ public class NetworkRequestManager {
             con.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
-        LOGGER.info(String.format("setNodePrompt Payload:%s", body));
+        LOGGER.debug(String.format("setNodePrompt Payload:%s", body));
 
         con.setUseCaches(false);
         con.setDoInput(true);

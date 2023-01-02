@@ -47,12 +47,6 @@ public class ClientChatInject {
                 ArrayList<String> interactVillagerIDs = new ArrayList<String>();
                 for (NPCVillager.NPCVillagerEntity obj : nearestVillager) {
                     interactVillagerIDs.add(obj.getStringUUID());
-
-                    // Set the status on the client side
-                    // TODO: Status maintainence
-//                    obj.setIsTalkingToPlayer(player);
-//                    obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
-//                    obj.setProcessingMessage(true);
                 }
                 j0.put("interacted",interactVillagerIDs);
                 j0.put("msg",message);
@@ -153,9 +147,6 @@ public class ClientChatInject {
 
                     if (fromEntity instanceof NPCVillager.NPCVillagerEntity) {
                         NPCVillagerEntity f0 = (NPCVillager.NPCVillagerEntity) fromEntity;
-
-//                        controlVillagerLocally(originalMsg, toEntityID, f0);
-
                         TextComponent messageComponent = getTextComponent(originalMsg, toEntity, f0);
 
                         event.setMessage(messageComponent);
@@ -223,17 +214,4 @@ public class ClientChatInject {
         messageComponent.append(contentString);
         return messageComponent;
     }
-
-//    @OnlyIn(Dist.CLIENT)
-//    private static void controlVillagerLocally(String originalMsg, int toEntityID, NPCVillagerEntity f0) {
-//        if (isPlayerEntitySelf(toEntityID)) {
-//            f0.getLookControl().setLookAt(getCurrentPlayer().position());
-//            if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
-//                f0.eatAndDigestFood();
-//                f0.setJumping(true);
-//            }
-//            f0.playTalkSound();
-//            f0.setProcessingMessage(false);
-//        }
-//    }
 }

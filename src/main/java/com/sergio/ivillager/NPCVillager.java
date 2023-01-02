@@ -11,6 +11,7 @@ import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.brain.Brain;
@@ -34,6 +35,7 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.StructureSpawnListGatherEvent;
 import net.minecraft.world.gen.feature.structure.Structure;
@@ -170,6 +172,17 @@ public class NPCVillager extends NPCModElement.ModElement {
     }
 
     @SubscribeEvent
+    public void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) throws Exception {
+        if (event.getEntityLiving() instanceof ServerPlayerEntity) {
+            if  (event.getTarget() instanceof NPCVillagerEntity) {
+                NPCVillagerEntity e0 = (NPCVillagerEntity) event.getTarget();
+                interactWithEntityWithAction((ServerPlayerEntity) event.getEntityLiving(),
+                        "(friendly pat)", e0);
+            }
+        }
+    }
+
+    @SubscribeEvent
     public void onLivingAttackEvent(LivingAttackEvent event) throws Exception {
         if (event.getEntityLiving() instanceof NPCVillagerEntity) {
             NPCVillagerEntity e0 = (NPCVillagerEntity) event.getEntityLiving();
@@ -192,7 +205,7 @@ public class NPCVillager extends NPCModElement.ModElement {
                         m0.put(event.getSource().getEntity().getStringUUID(), current_time_stamp);
                         b0.setMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY, m0);
                     }
-                    interactWithEntityWithAction((ServerPlayerEntity) event.getSource().getEntity(), "(beat you)", e0);
+                    interactWithEntityWithAction((ServerPlayerEntity) event.getSource().getEntity(), "(punch)", e0);
                 }
             }
         }
