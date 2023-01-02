@@ -129,13 +129,15 @@ public class Utils {
                     long delta = current_time_stamp - m0.get(uuid);
                     if (delta < 600000) {
                         ServerPlayerEntity p0 = s1.getPlayerList().getPlayer(UUID.fromString(uuid));
-                        description.append("Player ")
-                                .append(p0.getName().getString())
-                                .append(" has attacked ")
-                                .append(contextEntity.getName().getString())
-                                .append(" ")
-                                .append(delta/60000)
-                                .append(" minute ago.");
+                        if (p0 != null) {
+                            description.append("Player ")
+                                    .append(p0.getName().getString())
+                                    .append(" has attacked ")
+                                    .append(contextEntity.getName().getString())
+                                    .append(" ")
+                                    .append(delta / 60000)
+                                    .append(" minute ago.");
+                        }
                     }
                 }
                 return description.toString();

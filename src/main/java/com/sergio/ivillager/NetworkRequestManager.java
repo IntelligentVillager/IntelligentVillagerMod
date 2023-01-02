@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -343,6 +344,7 @@ public class NetworkRequestManager {
         con.setUseCaches(false);
         con.setDoInput(true);
         con.setDoOutput(true);
+        // TODO: Don't support chinese body
         DataOutputStream wr = new DataOutputStream(con.getOutputStream());
         wr.writeBytes(payload);
         wr.flush();
