@@ -132,7 +132,7 @@ public class Utils {
                         if (p0 != null) {
                             description.append("Player ")
                                     .append(p0.getName().getString())
-                                    .append(" has attacked ")
+                                    .append(" has hurt ")
                                     .append(contextEntity.getName().getString())
                                     .append(" ")
                                     .append(delta / 60000)
@@ -157,6 +157,8 @@ public class Utils {
                     brain.getMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
             Optional<Map<String, Long>> optional_player_attack_history =
                     brain.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
+            Optional<String> optional_weather_memory =
+                    brain.getMemory(NPCVillagerMod.WEATHER_MEMORY);
 
             if (optional_livingentities.isPresent()){
                 List<LivingEntity> l0 = optional_livingentities.get();
@@ -174,6 +176,8 @@ public class Utils {
                 description.append(NPCVillagerPlayerAttackHistoryInterpreter.interpret(m0,
                         contextEntity)).append("\n");
             }
+
+            optional_weather_memory.ifPresent(description::append);
 
             description.append("\nSecond, there is a dialogue between ")
                     .append(contextEntity.getName().getString())

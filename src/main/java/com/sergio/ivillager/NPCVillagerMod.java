@@ -2,6 +2,7 @@ package com.sergio.ivillager;
 
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import com.sergio.ivillager.ai.NPCVillagerCompatriotsSensor;
+import com.sergio.ivillager.ai.NPCVillagerWeatherSensor;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
 import net.minecraft.block.Block;
@@ -11,6 +12,7 @@ import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.loot.conditions.WeatherCheck;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -52,8 +54,14 @@ public class NPCVillagerMod {
     public static final MemoryModuleType<Map<String, Long>> PLAYER_ATTACK_HISTORY =
             new MemoryModuleType<Map<String, Long>>(Optional.empty());
 
+    public static final MemoryModuleType<String> WEATHER_MEMORY =
+            new MemoryModuleType<String>(Optional.empty());
+
     public static final SensorType<NPCVillagerCompatriotsSensor> COMPATRIOTS_SENSOR_TYPE =
             new SensorType<>(NPCVillagerCompatriotsSensor::new);
+
+    public static final SensorType<NPCVillagerWeatherSensor> WEATHER_SENSOR =
+            new SensorType<>(NPCVillagerWeatherSensor::new);
 
     public NPCVillagerMod() {
         elements = new NPCModElement();
@@ -111,18 +119,24 @@ public class NPCVillagerMod {
 
     @SubscribeEvent
     public void registerMemoryModuleType(RegistryEvent.Register<MemoryModuleType<?>> event) {
-        LOGGER.info("register mod memory module type");
+        LOGGER.info("[SERVER] Registering villager memory module types");
         COMPATRIOTS_MEMORY_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_memory_type");
         PLAYER_ATTACK_HISTORY.setRegistryName(Utils.MOD_ID, "attacked_by_player_memory_type");
+        WEATHER_MEMORY.setRegistryName(Utils.MOD_ID, "weather_memory");
+
         event.getRegistry().register(PLAYER_ATTACK_HISTORY);
         event.getRegistry().register(COMPATRIOTS_MEMORY_TYPE);
+        event.getRegistry().register(WEATHER_MEMORY);
     }
 
     @SubscribeEvent
     public void registerSensorType(RegistryEvent.Register<SensorType<?>> event) {
-        LOGGER.info("register mod sensor type");
+        LOGGER.info("[SERVER] Registering villager sensor types");
         COMPATRIOTS_SENSOR_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_sensor_type");
+        WEATHER_SENSOR.setRegistryName(Utils.MOD_ID, "weather_sensor");
+
         event.getRegistry().register(COMPATRIOTS_SENSOR_TYPE);
+        event.getRegistry().register(WEATHER_SENSOR);
     }
 
     private static class NPCVillagerModFMLBusEvents {

@@ -410,12 +410,14 @@ public class NPCVillager extends NPCModElement.ModElement {
                         MemoryModuleType.HURT_BY_ENTITY, MemoryModuleType.NEAREST_HOSTILE,
                         MemoryModuleType.HEARD_BELL_TIME,
                         MemoryModuleType.GOLEM_DETECTED_RECENTLY,
-                        NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE, NPCVillagerMod.PLAYER_ATTACK_HISTORY);
+                        NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE,
+                        NPCVillagerMod.PLAYER_ATTACK_HISTORY, NPCVillagerMod.WEATHER_MEMORY);
 
         private static final ImmutableList<SensorType<? extends Sensor<? super NPCVillagerEntity>>> SENSOR_TYPES
                 = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS
                 , SensorType.NEAREST_ITEMS, SensorType.HURT_BY, SensorType.VILLAGER_HOSTILES,
-                SensorType.GOLEM_DETECTED, NPCVillagerMod.COMPATRIOTS_SENSOR_TYPE);
+                SensorType.GOLEM_DETECTED, NPCVillagerMod.COMPATRIOTS_SENSOR_TYPE,
+                NPCVillagerMod.WEATHER_SENSOR);
 
         private static final DataParameter<Boolean> WALKING_CONTROL_FORCE_TRIGGER =
                 EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.BOOLEAN);
