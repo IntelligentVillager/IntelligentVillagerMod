@@ -18,7 +18,6 @@ public class NPCVillagerWalkingGoal extends Goal {
     protected double wantedZ;
     protected final double speedModifier;
     protected int interval;
-    protected boolean forceTrigger;
     private boolean checkNoActionTime;
     public static final Logger LOGGER = LogManager.getLogger(NPCVillagerWalkingGoal.class);
 
@@ -39,10 +38,23 @@ public class NPCVillagerWalkingGoal extends Goal {
     }
 
     public boolean canUse() {
+        if (this.mob.getControlWalkForceTrigger()) {
+            Vector3d vector3d = this.getPosition();
+            if (vector3d == null) {
+                return false;
+            } else {
+                this.wantedX = vector3d.x;
+                this.wantedY = vector3d.y;
+                this.wantedZ = vector3d.z;
+                this.mob.setWalkingControlForceTrigger(false);
+                return true;
+            }
+        }
+
         if (this.mob.isVehicle() || this.mob.getIsTalkingToPlayer() != null) {
             return false;
         } else {
-            if (!this.forceTrigger) {
+            if (!this.mob.getControlWalkForceTrigger()) {
                 if (this.checkNoActionTime && this.mob.getNoActionTime() >= 100) {
                     return false;
                 }
@@ -59,7 +71,7 @@ public class NPCVillagerWalkingGoal extends Goal {
                 this.wantedX = vector3d.x;
                 this.wantedY = vector3d.y;
                 this.wantedZ = vector3d.z;
-                this.forceTrigger = false;
+                this.mob.setWalkingControlForceTrigger(false);
                 return true;
             }
         }
@@ -81,10 +93,6 @@ public class NPCVillagerWalkingGoal extends Goal {
     public void stop() {
         this.mob.getNavigation().stop();
         super.stop();
-    }
-
-    public void trigger() {
-        this.forceTrigger = true;
     }
 
     public void setInterval(int p_179479_1_) {

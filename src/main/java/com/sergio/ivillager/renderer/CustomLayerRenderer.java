@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.LivingEntity;
@@ -20,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @OnlyIn(Dist.CLIENT)
-public class CustomLayerRenderer<T extends LivingEntity, M extends PlayerModel<T>> extends LayerRenderer<T,M>{
+public class CustomLayerRenderer<T extends LivingEntity, M extends BipedModel<T>> extends LayerRenderer<T,M>{
     private ResourceLocation texture;
     public static final Logger LOGGER = LogManager.getLogger(CustomLayerRenderer.class);
 

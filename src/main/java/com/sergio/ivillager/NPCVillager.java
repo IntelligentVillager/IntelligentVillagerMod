@@ -1,7 +1,6 @@
 package com.sergio.ivillager;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -11,9 +10,9 @@ import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
@@ -23,17 +22,17 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.GlobalPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
-import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.gen.feature.structure.VillageStructure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -52,8 +51,6 @@ import net.minecraft.network.datasync.DataSerializers;
 
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.World;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.DamageSource;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.Item;
@@ -69,8 +66,8 @@ import net.minecraftforge.event.ServerChatEvent;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 @NPCModElement.ModElement.Tag
 @Mod.EventBusSubscriber
@@ -270,6 +267,10 @@ public class NPCVillager extends NPCModElement.ModElement {
     private static void interactWithEntityWithAction(ServerPlayerEntity player, String actionMsg,
                                             NPCVillagerEntity obj) {
         if (obj != null) {
+            obj.setIsTalkingToPlayer(player);
+//            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
+            obj.setProcessingMessage(true);
+
             NetworkRequestManager.asyncInteractWithNode(player.getUUID(), obj.getCustomNodePublicId(),
                     actionMsg,
                     response -> {
@@ -283,6 +284,12 @@ public class NPCVillager extends NPCModElement.ModElement {
                             j0.put("code", 0);
                             j0.put("msg", Utils.ERROR_MESSAGE);
                         }
+
+                        if (response!= null) {
+                            respondToPotentialActionResponse(player, response.trim(), obj);
+                        }
+
+                        obj.setProcessingMessage(false);
 
                         ITextComponent msg = new StringTextComponent(String.format("<villager" +
                                 " response>%s", Utils.JsonConverter.encodeMapToJsonString(j0)));
@@ -308,12 +315,10 @@ public class NPCVillager extends NPCModElement.ModElement {
                             j0.put("msg", Utils.ERROR_MESSAGE);
                         }
 
-                        obj.getLookControl().setLookAt(player.position());
-                        if (originalMsg.startsWith("*") && originalMsg.endsWith("*")) {
-                            obj.eatAndDigestFood();
-                            obj.setJumping(true);
+                        if (response!= null) {
+                            respondToPotentialActionResponse(player, response.trim(), obj);
                         }
-                        obj.playTalkSound();
+
                         obj.setProcessingMessage(false);
 
                         ITextComponent msg = new StringTextComponent(String.format("<villager" +
@@ -322,6 +327,26 @@ public class NPCVillager extends NPCModElement.ModElement {
                         broadcastToOtherPlayerInInteractiveRange(player, msg);
                     });
         }
+    }
+
+    private static void respondToPotentialActionResponse(ServerPlayerEntity player, String originalMsg,
+                                                         NPCVillagerEntity f0) {
+        f0.getLookControl().setLookAt(player.position());
+
+        Pattern pattern = Pattern.compile("\\(.*\\)");
+        boolean hasParentheses = pattern.matcher(originalMsg).find();
+
+        if (hasParentheses) {
+            if (originalMsg.contains("(jump)")) {
+                f0.getJumpControl().jump();
+            }
+
+            if (originalMsg.contains("(run away)")) {
+                f0.setWalkingControlForceTrigger(true);
+            }
+        }
+
+        f0.playTalkSound();
     }
 
     @Override
@@ -369,6 +394,10 @@ public class NPCVillager extends NPCModElement.ModElement {
         private Boolean isProcessingMessage = false;
         private TextFormatting customNameColor = TextFormatting.WHITE;
 
+        public boolean swing_custom_flag = false;
+        public int swingTime_custom = -1;
+        public float attackAnim_custom = -1;
+
         // Refresh intelligence with latest context every 100 ticks by default
         private int remainingRefreshIntelligenceTick = Utils.ENTITYINTELLIGENCE_TICKING_INTERVAL;
 
@@ -388,6 +417,9 @@ public class NPCVillager extends NPCModElement.ModElement {
                 , SensorType.NEAREST_ITEMS, SensorType.HURT_BY, SensorType.VILLAGER_HOSTILES,
                 SensorType.GOLEM_DETECTED, NPCVillagerMod.COMPATRIOTS_SENSOR_TYPE);
 
+        private static final DataParameter<Boolean> WALKING_CONTROL_FORCE_TRIGGER =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.BOOLEAN);
+
         public NPCVillagerEntity(FMLPlayMessages.SpawnEntity packet, World world) {
             this(entity, world);
         }
@@ -397,6 +429,7 @@ public class NPCVillager extends NPCModElement.ModElement {
 
             setBaby(false);
             setNoAi(false);
+            setLeftHanded(false);
 
             this.getNavigation().setCanFloat(true);
             this.setCanPickUpLoot(true);
@@ -434,14 +467,19 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.entityData.define(CUSTOM_NODE_PUBLIC_ID, "");
             this.entityData.define(CUSTOM_CONTEXT_INFO, "");
             this.entityData.define(HAS_AWAKEN, false);
+            this.entityData.define(WALKING_CONTROL_FORCE_TRIGGER, false);
         }
 
         protected void customServerAiStep() {
             this.level.getProfiler().push("villagerBrain");
             this.getBrain().tick((ServerWorld)this.level, this);
             this.level.getProfiler().pop();
-
             super.customServerAiStep();
+        }
+
+        public void aiStep() {
+            super.aiStep();
+            customUpdateSwingTime();
         }
 
         public void tick() {
@@ -452,6 +490,15 @@ public class NPCVillager extends NPCModElement.ModElement {
                 this.refreshIntelligence();
                 remainingRefreshIntelligenceTick = Utils.ENTITYINTELLIGENCE_TICKING_INTERVAL;
             }
+        }
+
+        public void jumpFromGround() {
+            super.jumpFromGround();
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        public float getAttackAnim(float p_70678_1_) {
+            return this.attackAnim_custom;
         }
 
         @Override
@@ -486,6 +533,18 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
 
         //region GETTER/SETTER for all custom data
+
+        public Boolean getControlWalkForceTrigger() {
+            return this.entityData.get(WALKING_CONTROL_FORCE_TRIGGER);
+        }
+
+        public void setWalkingControlForceTrigger(Boolean flag) {
+            if (flag) {
+                this.goalSelector.enableControlFlag(Goal.Flag.MOVE);
+            }
+            this.entityData.set(WALKING_CONTROL_FORCE_TRIGGER, flag);
+        }
+
         public Boolean getHasAwaken() {
             return this.entityData.get(HAS_AWAKEN);
         }
@@ -573,6 +632,29 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.entityData.set(CUSTOM_CONTEXT_INFO, n0);
         }
         //endregion
+
+        public void customUpdateSwingTime() {
+            int i = 6;
+            if (this.swing_custom_flag) {
+                ++this.swingTime_custom;
+                if (this.swingTime_custom >= i) {
+                    this.swingTime_custom = 0;
+                    this.swing_custom_flag = false;
+                }
+            } else {
+                this.swingTime_custom = 0;
+            }
+
+            this.attackAnim_custom = (float)this.swingTime_custom / (float)i;
+        }
+
+        public void waveHands(Hand p_226292_1_, boolean p_226292_2_) {
+            if (!this.swing_custom_flag) {
+                this.swingTime_custom = -1;
+                this.swing_custom_flag = true;
+                this.swingingArm = p_226292_1_;
+            }
+        }
 
         public void readAdditionalSaveData(CompoundNBT p_70037_1_) {
             super.readAdditionalSaveData(p_70037_1_);

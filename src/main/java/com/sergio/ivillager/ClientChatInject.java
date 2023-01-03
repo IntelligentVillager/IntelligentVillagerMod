@@ -4,6 +4,11 @@ package com.sergio.ivillager;
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.ai.RandomPositionGenerator;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Mod.EventBusSubscriber
 public class ClientChatInject {
@@ -147,6 +153,9 @@ public class ClientChatInject {
 
                     if (fromEntity instanceof NPCVillager.NPCVillagerEntity) {
                         NPCVillagerEntity f0 = (NPCVillager.NPCVillagerEntity) fromEntity;
+
+                        respondToPotentialActionResponse(originalMsg, toEntity, f0);
+
                         TextComponent messageComponent = getTextComponent(originalMsg, toEntity, f0);
 
                         event.setMessage(messageComponent);
@@ -163,6 +172,28 @@ public class ClientChatInject {
             LOGGER.error(e);
             event.setCanceled(true);
             e.printStackTrace();
+        }
+    }
+
+    private static void respondToPotentialActionResponse(String originalMsg, Entity toEntity, NPCVillagerEntity f0) {
+        Pattern pattern = Pattern.compile("\\(.*\\)");
+        boolean hasParentheses = pattern.matcher(originalMsg).find();
+
+        if (hasParentheses) {
+            if (originalMsg.contains("(friendly pat)")) {
+                f0.waveHands(Hand.MAIN_HAND, false);
+            }
+
+            if (originalMsg.contains("(wave hands)") || originalMsg.contains("(wave hand)")) {
+                f0.waveHands(Hand.MAIN_HAND, false);
+                f0.waveHands(Hand.OFF_HAND, false);
+            }
+
+            if (originalMsg.contains("(punch)") || originalMsg.contains("(beat)")) {
+                f0.waveHands(Hand.MAIN_HAND,true);
+                DamageSource d0 = new EntityDamageSource("mob", f0);
+                toEntity.hurt(d0, 0.5f);
+            }
         }
     }
 
