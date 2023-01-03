@@ -47,34 +47,6 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
         this.addLayer(customLayerRenderer);
     }
 
-    public void render(NPCVillagerEntity p_225623_1_, float p_225623_2_, float p_225623_3_, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int p_225623_6_) {
-        this.setModelProperties(p_225623_1_);
-
-        if (p_225623_1_.swing_custom_flag) {
-            this.model.attackTime = p_225623_1_.attackAnim_custom;
-        } else {
-            this.model.attackTime = 0.0f;
-        }
-
-        super.render(p_225623_1_, p_225623_2_, p_225623_3_, p_225623_4_, p_225623_5_, p_225623_6_);
-    }
-
-    public Vector3d getRenderOffset(NPCVillagerEntity p_225627_1_, float p_225627_2_) {
-        return p_225627_1_.isCrouching() ? new Vector3d(0.0D, -0.125D, 0.0D) : super.getRenderOffset(p_225627_1_, p_225627_2_);
-    }
-
-    private void setModelProperties(NPCVillagerEntity p_177137_1_) {
-        BipedModel.ArmPose bipedmodel$armpose = getArmPose(p_177137_1_, Hand.MAIN_HAND);
-        BipedModel.ArmPose bipedmodel$armpose1 = getArmPose(p_177137_1_, Hand.OFF_HAND);
-        if (bipedmodel$armpose.isTwoHanded()) {
-            bipedmodel$armpose1 = p_177137_1_.getOffhandItem().isEmpty() ? BipedModel.ArmPose.EMPTY : BipedModel.ArmPose.ITEM;
-        }
-
-        this.getModel().rightArmPose = bipedmodel$armpose;
-        this.getModel().leftArmPose = bipedmodel$armpose1;
-
-    }
-
     private static BipedModel.ArmPose getArmPose(NPCVillagerEntity p_241741_0_, Hand p_241741_1_) {
         ItemStack itemstack = p_241741_0_.getItemInHand(p_241741_1_);
         if (itemstack.isEmpty()) {
@@ -105,11 +77,39 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
         }
     }
 
+    public void render(NPCVillagerEntity p_225623_1_, float p_225623_2_, float p_225623_3_, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int p_225623_6_) {
+        this.setModelProperties(p_225623_1_);
+
+        if (p_225623_1_.swing_custom_flag) {
+            this.model.attackTime = p_225623_1_.attackAnim_custom;
+        } else {
+            this.model.attackTime = 0.0f;
+        }
+
+        super.render(p_225623_1_, p_225623_2_, p_225623_3_, p_225623_4_, p_225623_5_, p_225623_6_);
+    }
+
+    public Vector3d getRenderOffset(NPCVillagerEntity p_225627_1_, float p_225627_2_) {
+        return p_225627_1_.isCrouching() ? new Vector3d(0.0D, -0.125D, 0.0D) : super.getRenderOffset(p_225627_1_, p_225627_2_);
+    }
+
+    private void setModelProperties(NPCVillagerEntity p_177137_1_) {
+        BipedModel.ArmPose bipedmodel$armpose = getArmPose(p_177137_1_, Hand.MAIN_HAND);
+        BipedModel.ArmPose bipedmodel$armpose1 = getArmPose(p_177137_1_, Hand.OFF_HAND);
+        if (bipedmodel$armpose.isTwoHanded()) {
+            bipedmodel$armpose1 = p_177137_1_.getOffhandItem().isEmpty() ? BipedModel.ArmPose.EMPTY : BipedModel.ArmPose.ITEM;
+        }
+
+        this.getModel().rightArmPose = bipedmodel$armpose;
+        this.getModel().leftArmPose = bipedmodel$armpose1;
+
+    }
+
     public ResourceLocation getTextureLocation(NPCVillagerEntity p_110775_1_) {
         this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(
                 "textures/entities", "sss.png")));
         return new ResourceLocation(Utils.resourcePathBuilder("textures/entities",
-                p_110775_1_.getCustomSkin()+ ".png"));
+                p_110775_1_.getCustomSkin() + ".png"));
     }
 
     protected void scale(NPCVillagerEntity p_225620_1_, MatrixStack p_225620_2_, float p_225620_3_) {
@@ -125,7 +125,7 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
         float f = p_225621_1_.getSwimAmount(p_225621_5_);
         if (p_225621_1_.isFallFlying()) {
             super.setupRotations(p_225621_1_, p_225621_2_, p_225621_3_, p_225621_4_, p_225621_5_);
-            float f1 = (float)p_225621_1_.getFallFlyingTicks() + p_225621_5_;
+            float f1 = (float) p_225621_1_.getFallFlyingTicks() + p_225621_5_;
             float f2 = MathHelper.clamp(f1 * f1 / 100.0F, 0.0F, 1.0F);
             if (!p_225621_1_.isAutoSpinAttack()) {
                 p_225621_2_.mulPose(Vector3f.XP.rotationDegrees(f2 * (-90.0F - p_225621_1_.xRot)));
@@ -138,7 +138,7 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
             if (d0 > 0.0D && d1 > 0.0D) {
                 double d2 = (vector3d1.x * vector3d.x + vector3d1.z * vector3d.z) / Math.sqrt(d0 * d1);
                 double d3 = vector3d1.x * vector3d.z - vector3d1.z * vector3d.x;
-                p_225621_2_.mulPose(Vector3f.YP.rotation((float)(Math.signum(d3) * Math.acos(d2))));
+                p_225621_2_.mulPose(Vector3f.YP.rotation((float) (Math.signum(d3) * Math.acos(d2))));
             }
         } else if (f > 0.0F) {
             super.setupRotations(p_225621_1_, p_225621_2_, p_225621_3_, p_225621_4_, p_225621_5_);
@@ -146,7 +146,7 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
             float f4 = MathHelper.lerp(f, 0.0F, f3);
             p_225621_2_.mulPose(Vector3f.XP.rotationDegrees(f4));
             if (p_225621_1_.isVisuallySwimming()) {
-                p_225621_2_.translate(0.0D, -1.0D, (double)0.3F);
+                p_225621_2_.translate(0.0D, -1.0D, (double) 0.3F);
             }
         } else {
             super.setupRotations(p_225621_1_, p_225621_2_, p_225621_3_, p_225621_4_, p_225621_5_);

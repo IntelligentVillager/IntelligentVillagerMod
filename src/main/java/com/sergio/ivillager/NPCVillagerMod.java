@@ -3,6 +3,7 @@ package com.sergio.ivillager;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import com.sergio.ivillager.ai.NPCVillagerCompatriotsSensor;
 import com.sergio.ivillager.ai.NPCVillagerWeatherSensor;
+import com.sergio.ivillager.client.ClientChatInject;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.renderer.NPCVillagerRenderer;
 import net.minecraft.block.Block;
@@ -10,9 +11,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.loot.conditions.WeatherCheck;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -28,14 +27,12 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 
@@ -43,28 +40,23 @@ import java.util.function.Supplier;
 @Mod.EventBusSubscriber
 public class NPCVillagerMod {
     public static final Logger LOGGER = LogManager.getLogger(NPCVillagerMod.class);
+    public static final MemoryModuleType<List<NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
+            new MemoryModuleType<List<NPCVillagerEntity>>(Optional.empty());
+    public static final MemoryModuleType<String> GOLEM_PROTECTING_MEMORY =
+            new MemoryModuleType<String>(Optional.empty());
+    public static final MemoryModuleType<Map<String, Long>> PLAYER_ATTACK_HISTORY =
+            new MemoryModuleType<Map<String, Long>>(Optional.empty());
+    public static final MemoryModuleType<String> WEATHER_MEMORY =
+            new MemoryModuleType<String>(Optional.empty());
+    public static final SensorType<NPCVillagerCompatriotsSensor> COMPATRIOTS_SENSOR_TYPE =
+            new SensorType<>(NPCVillagerCompatriotsSensor::new);
+    public static final SensorType<NPCVillagerWeatherSensor> WEATHER_SENSOR =
+            new SensorType<>(NPCVillagerWeatherSensor::new);
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel PACKET_HANDLER =
             NetworkRegistry.newSimpleChannel(new ResourceLocation(Utils.MOD_ID, Utils.MOD_ID),
-            () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
+                    () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     public NPCModElement elements;
-    public static final MemoryModuleType<List<NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
-            new MemoryModuleType<List<NPCVillagerEntity>>(Optional.empty());
-
-    public static final MemoryModuleType<String> GOLEM_PROTECTING_MEMORY =
-            new MemoryModuleType<String>(Optional.empty());
-
-    public static final MemoryModuleType<Map<String, Long>> PLAYER_ATTACK_HISTORY =
-            new MemoryModuleType<Map<String, Long>>(Optional.empty());
-
-    public static final MemoryModuleType<String> WEATHER_MEMORY =
-            new MemoryModuleType<String>(Optional.empty());
-
-    public static final SensorType<NPCVillagerCompatriotsSensor> COMPATRIOTS_SENSOR_TYPE =
-            new SensorType<>(NPCVillagerCompatriotsSensor::new);
-
-    public static final SensorType<NPCVillagerWeatherSensor> WEATHER_SENSOR =
-            new SensorType<>(NPCVillagerWeatherSensor::new);
 
     public NPCVillagerMod() {
         elements = new NPCModElement();
@@ -72,14 +64,11 @@ public class NPCVillagerMod {
         LOGGER.info("IntelligentVillager mod loading");
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG);
-
         FMLJavaModLoadingContext.get().getModEventBus().register(this);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientLoad);
         MinecraftForge.EVENT_BUS.register(new NPCVillagerModFMLBusEvents(this));
     }
-
-
 
     private void init(FMLCommonSetupEvent event) {
         elements.getElements().forEach(element -> element.init(event));

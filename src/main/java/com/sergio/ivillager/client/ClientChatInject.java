@@ -1,11 +1,10 @@
-package com.sergio.ivillager;
+package com.sergio.ivillager.client;
 
 
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
+import com.sergio.ivillager.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.ai.RandomPositionGenerator;
-import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.Hand;
@@ -40,7 +39,7 @@ public class ClientChatInject {
         if (message.startsWith("/")) {
         } else {
             PlayerEntity player = getCurrentPlayer();
-            ArrayList<NPCVillager.NPCVillagerEntity> nearestVillager =
+            ArrayList<NPCVillagerEntity> nearestVillager =
                     getNeareFacedVillager(player, getNearbyEntities(player,
                             player.getEntity().level, 6.0));
 
@@ -51,7 +50,7 @@ public class ClientChatInject {
 
                 Map<String, Object> j0 = new HashMap<String, Object>();
                 ArrayList<String> interactVillagerIDs = new ArrayList<String>();
-                for (NPCVillager.NPCVillagerEntity obj : nearestVillager) {
+                for (NPCVillagerEntity obj : nearestVillager) {
                     interactVillagerIDs.add(obj.getStringUUID());
                 }
                 j0.put("interacted",interactVillagerIDs);
@@ -69,14 +68,14 @@ public class ClientChatInject {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static ArrayList<NPCVillager.NPCVillagerEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
+    public static ArrayList<NPCVillagerEntity> getNeareFacedVillager(PlayerEntity player, List<Entity> nearByEntities) {
         Vector3d playerPos = player.position();
         Vector3d playerLook = player.getViewVector(0.5f);
 
-        ArrayList<NPCVillager.NPCVillagerEntity> nearCustomVillagerList = new ArrayList<>();
+        ArrayList<NPCVillagerEntity> nearCustomVillagerList = new ArrayList<>();
 
         for (Entity data : nearByEntities) {
-            if (data instanceof NPCVillager.NPCVillagerEntity) {
+            if (data instanceof NPCVillagerEntity) {
                 Vector3d villagerPos = data.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
@@ -151,8 +150,8 @@ public class ClientChatInject {
 
                     if (abandonMessageOutsideRange(event, fromEntityID, toEntityID, fromEntity, toEntity)) return;
 
-                    if (fromEntity instanceof NPCVillager.NPCVillagerEntity) {
-                        NPCVillagerEntity f0 = (NPCVillager.NPCVillagerEntity) fromEntity;
+                    if (fromEntity instanceof NPCVillagerEntity) {
+                        NPCVillagerEntity f0 = (NPCVillagerEntity) fromEntity;
 
                         respondToPotentialActionResponse(originalMsg, toEntity, f0);
 
@@ -221,7 +220,7 @@ public class ClientChatInject {
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static TextComponent getTextComponent(String originalMsg, Entity toEntity, NPCVillager.NPCVillagerEntity f0) {
+    private static TextComponent getTextComponent(String originalMsg, Entity toEntity, NPCVillagerEntity f0) {
         ITextComponent nameString = new StringTextComponent(String.format("<%s>",
                 f0.getName().getString()))
                 .setStyle(Style.EMPTY.withColor(TextFormatting.BLUE));

@@ -57,22 +57,21 @@ import java.util.Map;
 
 public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IReputationTracking, IVillagerDataHolder {
 
+    public static final Map<Item, Integer> FOOD_POINTS = ImmutableMap.of(Items.BREAD, 4, Items.POTATO, 1, Items.CARROT, 1, Items.BEETROOT, 1);
     public static EntityType entity = (EntityType.Builder.<NPCVillagerBaseEntity>of(NPCVillagerBaseEntity::new,
                     EntityClassification.MISC)
             .setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(NPCVillagerBaseEntity::new)
             .sized(0.6f, 1.00f)).build("test_ainpc_base").setRegistryName("test_ainpc_base");
-
     private static final DataParameter<VillagerData> DATA_VILLAGER_DATA = EntityDataManager.defineId(NPCVillagerBaseEntity.class, DataSerializers.VILLAGER_DATA);
-    public static final Map<Item, Integer> FOOD_POINTS = ImmutableMap.of(Items.BREAD, 4, Items.POTATO, 1, Items.CARROT, 1, Items.BEETROOT, 1);
-    private byte foodLevel;
     private final GossipManager gossips = new GossipManager();
+    private byte foodLevel;
     private long lastGossipTime;
     private long lastGossipDecayTime;
     private int villagerXp;
 
     public NPCVillagerBaseEntity(EntityType<? extends NPCVillagerBaseEntity> p_i50183_1_, World p_i50183_2_) {
         super(p_i50183_1_, p_i50183_2_);
-        ((GroundPathNavigator)this.getNavigation()).setCanOpenDoors(true);
+        ((GroundPathNavigator) this.getNavigation()).setCanOpenDoors(true);
         this.getNavigation().setCanFloat(true);
         this.setCanPickUpLoot(true);
         this.setVillagerData(this.getVillagerData().setType(VillagerType.PLAINS).setProfession(VillagerProfession.NONE));
@@ -133,7 +132,7 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
         p_213281_1_.putLong("LastRestock", 0L);
         p_213281_1_.putLong("LastGossipDecay", this.lastGossipDecayTime);
         p_213281_1_.putInt("RestocksToday", 0);
-        p_213281_1_.putBoolean ("AssignProfessionWhenSpawned", true);
+        p_213281_1_.putBoolean("AssignProfessionWhenSpawned", true);
     }
 
     public void readAdditionalSaveData(CompoundNBT p_70037_1_) {
@@ -186,6 +185,10 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
 
     }
 
+    public VillagerData getVillagerData() {
+        return this.entityData.get(DATA_VILLAGER_DATA);
+    }
+
     public void setVillagerData(VillagerData p_213753_1_) {
         VillagerData villagerdata = this.getVillagerData();
         if (villagerdata.getProfession() != p_213753_1_.getProfession()) {
@@ -195,15 +198,11 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
         this.entityData.set(DATA_VILLAGER_DATA, p_213753_1_);
     }
 
-    public VillagerData getVillagerData() {
-        return this.entityData.get(DATA_VILLAGER_DATA);
-    }
-
     public void setLastHurtByMob(@Nullable LivingEntity p_70604_1_) {
         if (p_70604_1_ != null && this.level instanceof ServerWorld) {
-            ((ServerWorld)this.level).onReputationEvent(IReputationType.VILLAGER_HURT, p_70604_1_, this);
+            ((ServerWorld) this.level).onReputationEvent(IReputationType.VILLAGER_HURT, p_70604_1_, this);
             if (this.isAlive() && p_70604_1_ instanceof PlayerEntity) {
-                this.level.broadcastEntityEvent(this, (byte)13);
+                this.level.broadcastEntityEvent(this, (byte) 13);
             }
         }
 
@@ -231,15 +230,15 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
 
     private void eatUntilFull() {
         if (this.hungry() && this.countFoodPointsInInventory() != 0) {
-            for(int i = 0; i < this.getInventory().getContainerSize(); ++i) {
+            for (int i = 0; i < this.getInventory().getContainerSize(); ++i) {
                 ItemStack itemstack = this.getInventory().getItem(i);
                 if (!itemstack.isEmpty()) {
                     Integer integer = FOOD_POINTS.get(itemstack.getItem());
                     if (integer != null) {
                         int j = itemstack.getCount();
 
-                        for(int k = j; k > 0; --k) {
-                            this.foodLevel = (byte)(this.foodLevel + integer);
+                        for (int k = j; k > 0; --k) {
+                            this.foodLevel = (byte) (this.foodLevel + integer);
                             this.getInventory().removeItem(i, 1);
                             if (!this.hungry()) {
                                 return;
@@ -259,7 +258,7 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
     }
 
     private void digestFood(int p_213758_1_) {
-        this.foodLevel = (byte)(this.foodLevel - p_213758_1_);
+        this.foodLevel = (byte) (this.foodLevel - p_213758_1_);
     }
 
     public void eatAndDigestFood() {
@@ -312,11 +311,12 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
     }
 
     public void thunderHit(ServerWorld p_241841_1_, LightningBoltEntity p_241841_2_) {
-        if (p_241841_1_.getDifficulty() != Difficulty.PEACEFUL && net.minecraftforge.event.ForgeEventFactory.canLivingConvert(this, EntityType.WITCH, (timer) -> {})) {
+        if (p_241841_1_.getDifficulty() != Difficulty.PEACEFUL && net.minecraftforge.event.ForgeEventFactory.canLivingConvert(this, EntityType.WITCH, (timer) -> {
+        })) {
             LOGGER.info("Villager {} was struck by lightning {}.", this, p_241841_2_);
             WitchEntity witchentity = EntityType.WITCH.create(p_241841_1_);
             witchentity.moveTo(this.getX(), this.getY(), this.getZ(), this.yRot, this.xRot);
-            witchentity.finalizeSpawn(p_241841_1_, p_241841_1_.getCurrentDifficultyAt(witchentity.blockPosition()), SpawnReason.CONVERSION, (ILivingEntityData)null, (CompoundNBT)null);
+            witchentity.finalizeSpawn(p_241841_1_, p_241841_1_.getCurrentDifficultyAt(witchentity.blockPosition()), SpawnReason.CONVERSION, (ILivingEntityData) null, (CompoundNBT) null);
             witchentity.setNoAi(this.isNoAi());
             if (this.hasCustomName()) {
                 witchentity.setCustomName(this.getCustomName());
@@ -414,13 +414,13 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
         return this.villagerXp;
     }
 
+    public void setVillagerXp(int p_213761_1_) {
+        this.villagerXp = p_213761_1_;
+    }
+
     @Override
     protected void rewardTradeXp(MerchantOffer p_213713_1_) {
         return;
-    }
-
-    public void setVillagerXp(int p_213761_1_) {
-        this.villagerXp = p_213761_1_;
     }
 
     public GossipManager getGossips() {
@@ -447,4 +447,6 @@ public class NPCVillagerBaseEntity extends AbstractVillagerEntity implements IRe
         super.stopSleeping();
         this.brain.setMemory(MemoryModuleType.LAST_WOKEN, this.level.getGameTime());
     }
+
+
 }

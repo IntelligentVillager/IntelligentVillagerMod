@@ -17,27 +17,8 @@ import java.util.function.Consumer;
 
 public class NetworkRequestManager {
 
-    public enum URLs {
-        AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
-        ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),
-        CREATE_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/full"),
-        SET_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/node_config"),
-        INTERACT_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/conversation" +
-                "?accessKey=%s&accessToken=%s");
-
-
-        private final String url;
-
-        URLs(String url) {
-            this.url = url;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-    }
-    private static final String USER_AGENT = "Mozilla/5.0";
     public static final Logger LOGGER = LogManager.getLogger(NetworkRequestManager.class);
+    private static final String USER_AGENT = "Mozilla/5.0";
 
     public static String getAuthToken(String email, String password) {
         try {
@@ -55,7 +36,7 @@ public class NetworkRequestManager {
     }
 
     public static String[] createNodeId(String name, String ssoToken) {
-        String[] result = {"",""};
+        String[] result = {"", ""};
         if (ssoToken == null) {
             return result;
         }
@@ -91,7 +72,7 @@ public class NetworkRequestManager {
 
             String resultStr =
                     NetworkRequestManager.sendPutRequestWithHeader(String.format(
-                            URLs.SET_NODE_URL.getUrl(),nodeId)
+                                    URLs.SET_NODE_URL.getUrl(), nodeId)
                             , data, body);
             JsonObject resultJson =
                     JsonConverter.encodeStringToJson(resultStr);
@@ -108,8 +89,7 @@ public class NetworkRequestManager {
         }
     }
 
-    public static Map<String, String> getAccessToken(String ssoToken)
-    {
+    public static Map<String, String> getAccessToken(String ssoToken) {
         Map<String, String> result = new HashMap<>();
         result.put("key", null);
         result.put("token", null);
@@ -145,7 +125,7 @@ public class NetworkRequestManager {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 if (!NPCVillagerManager
-                        .getInstance().isVerified()){
+                        .getInstance().isVerified()) {
                     // authentication information not set in config yet
                     return null;
                 }
@@ -159,7 +139,7 @@ public class NetworkRequestManager {
                                                 .getInstance()
                                                 .getAccessToken()),
                                 String.format("{\"text" +
-                                        "\":\"%s\"}",text));
+                                        "\":\"%s\"}", text));
                 JsonObject resultJson =
                         JsonConverter.encodeStringToJson(resultStr);
                 if (0 == resultJson.get("code").getAsInt()) {
@@ -183,7 +163,7 @@ public class NetworkRequestManager {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 if (!NPCVillagerManager
-                        .getInstance().isVerified(PlayerId)){
+                        .getInstance().isVerified(PlayerId)) {
                     // authentication information not set in config yet
                     return null;
                 }
@@ -197,7 +177,7 @@ public class NetworkRequestManager {
                                                 .getInstance()
                                                 .getAccessToken(PlayerId)),
                                 String.format("{\"text" +
-                                        "\":\"%s\"}",text));
+                                        "\":\"%s\"}", text));
                 JsonObject resultJson =
                         JsonConverter.encodeStringToJson(resultStr);
                 if (0 == resultJson.get("code").getAsInt()) {
@@ -218,7 +198,7 @@ public class NetworkRequestManager {
     }
 
     public static String sendPutRequestWithHeader(String url, Map<String, String> payload,
-                                                 String body) throws Exception {
+                                                  String body) throws Exception {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
@@ -471,6 +451,26 @@ public class NetworkRequestManager {
         }
         String[] result = {"", ""};
         return result;
+    }
+
+    public enum URLs {
+        AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
+        ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),
+        CREATE_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/full"),
+        SET_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/node_config"),
+        INTERACT_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/conversation" +
+                "?accessKey=%s&accessToken=%s");
+
+
+        private final String url;
+
+        URLs(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
     }
 }
 

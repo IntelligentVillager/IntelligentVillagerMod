@@ -168,7 +168,9 @@ public class NPCVillagerManager {
                                 villager.getCustomName().getString(),villager.getStringUUID(),
                                 player.getName().getString()));
                         villager.setIsTalkingToPlayer(null);
-                        villager.goalSelector.enableControlFlag(Goal.Flag.MOVE);
+                        if (!villager.getControlWalkIsWaitingOtherVillager()) {
+                            villager.goalSelector.enableControlFlag(Goal.Flag.MOVE);
+                        }
                     }
                 }
             }
@@ -181,6 +183,20 @@ public class NPCVillagerManager {
             if (villager != null) {
                 if (villager.getStringUUID().equalsIgnoreCase(EntityStringUUID)) {
                     return villager;
+                }
+            }
+        }
+        return null;
+    }
+
+    public NPCVillagerEntity findTheNextVillagerToTalkTo (NPCVillagerEntity entity) {
+        for (VillagerData data : this.villagersData.values()) {
+            NPCVillagerEntity villager = data.getEntity();
+            if (villager.getId() != entity.getId()) {
+                if (villager.getCustomVillagename().equals(entity.getCustomVillagename())){
+                    if (!villager.getNavigation().isInProgress() && !villager.getControlWalkForceTrigger()) {
+                        return villager;
+                    }
                 }
             }
         }

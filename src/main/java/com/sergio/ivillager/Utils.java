@@ -52,6 +52,37 @@ public class Utils {
 
         return villages.get(new Random().nextInt(villages.size()));
     }
+
+    public static String resourcePathBuilder(String file_path, String file_name) {
+        return String.format("intelligentvillager:%s" +
+                "/%s", file_path, file_name);
+    }
+
+    public static String nodeConfigBuilder(String name, String prompt) {
+        String p0 = prompt.replaceAll("\n", "");
+        String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
+                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
+                "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
+                "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
+                "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
+                "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
+                "\"text\": \"$(text)\",\"mode\": \"default\"," +
+                "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
+                " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+
+        String s1 = String.format(s0, name, "");
+        JsonObject bodyMap = JsonConverter.encodeStringToJson(s1);
+        JsonArray models = bodyMap.getAsJsonArray("models");
+        JsonObject model = models.get(0).getAsJsonObject();
+        JsonArray prompts = new JsonArray();
+        prompts.add(p0);
+        model.add("prompts", prompts);
+        models.set(0, model);
+        bodyMap.add("models", models);
+
+        return JsonConverter.decodeJsonToString(bodyMap);
+    }
+
     public static class NPCVillagerCompatriotsInterpreter {
         public static String interpret(List<NPCVillagerEntity> entities,
                                        NPCVillagerEntity contextEntity) {
@@ -73,14 +104,13 @@ public class Utils {
     }
 
     public static class NPCVillagerLivingEntityInterpreter {
-        public static String interpret(List<LivingEntity> entities, NPCVillagerEntity contextEntity)
-        {
+        public static String interpret(List<LivingEntity> entities, NPCVillagerEntity contextEntity) {
             StringBuilder description = new StringBuilder();
             Map<String, Integer> otherCreatures = new HashMap<>();
 
             if (entities.size() > 0) {
                 description.append("There are living creatures around: ");
-                for (int i = 0; i < entities.size() ; i++) {
+                for (int i = 0; i < entities.size(); i++) {
                     if (entities.get(i) instanceof NPCVillagerEntity) {
                         description.append("Villager ").append(entities.get(i).getName().getString());
                         if (i < entities.size() - 1) description.append(",");
@@ -95,7 +125,7 @@ public class Utils {
                 }
                 if (otherCreatures.keySet().size() > 0) {
                     description.append(" and ");
-                    for(String creature_name: otherCreatures.keySet()) {
+                    for (String creature_name : otherCreatures.keySet()) {
                         description.append(String.valueOf(otherCreatures.get(creature_name))).append(" ").append(creature_name).append(", ");
                     }
                 }
@@ -125,7 +155,7 @@ public class Utils {
                     return contextEntity.getName().getString() + " is living peacefully with all the " +
                             "players.";
                 }
-                for (String uuid:m0.keySet()) {
+                for (String uuid : m0.keySet()) {
                     long delta = current_time_stamp - m0.get(uuid);
                     if (delta < 600000) {
                         ServerPlayerEntity p0 = s1.getPlayerList().getPlayer(UUID.fromString(uuid));
@@ -144,6 +174,7 @@ public class Utils {
             }
         }
     }
+
     public static class ContextBuilder {
         public static String build(Brain<NPCVillagerEntity> brain,
                                    NPCVillagerEntity contextEntity) {
@@ -162,13 +193,13 @@ public class Utils {
             Optional<String> optional_golem_protecting =
                     brain.getMemory(NPCVillagerMod.GOLEM_PROTECTING_MEMORY);
 
-            if (optional_livingentities.isPresent()){
+            if (optional_livingentities.isPresent()) {
                 List<LivingEntity> l0 = optional_livingentities.get();
                 description.append(NPCVillagerLivingEntityInterpreter.interpret(l0,
                         contextEntity)).append("\n");
             }
 
-            if (optional_villagers_in_town.isPresent()){
+            if (optional_villagers_in_town.isPresent()) {
                 List<NPCVillagerEntity> l1 = optional_villagers_in_town.get();
                 description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity)).append("\n");
             }
@@ -187,10 +218,10 @@ public class Utils {
                     .append("and user. ")
                     .append(contextEntity.getName().getString())
                     .append(" should utter a sentence followed by an action wrapped by a pair of parentheses.\n" +
-                    "action:wave hands#walk forward#walk backward#run " +
+                            "action:wave hands#walk forward#walk backward#run " +
                             "away#jump#think#friendly pat#punch\n" +
-                    "Third, dialogue: \n" +
-                    "user: (jump) Hey!\n")
+                            "Third, dialogue: \n" +
+                            "user: (jump) Hey!\n")
                     .append(contextEntity.getName().getString())
                     .append(": (wave hands) Hey! What's up?\n");
             return description.toString();
@@ -219,7 +250,8 @@ public class Utils {
         private static final String[] IMAGE_NAMES = {
                 "villager_0", "villager_1", "villager_2",
                 "villager_3", "villager_4", "villager_5"
-        };;
+        };
+        ;
 
         public static String generateSkin() {
             Random rand = new Random();
@@ -232,7 +264,8 @@ public class Utils {
         private static final SoundEvent[] Sound_NAMES = {
                 SoundEvents.VILLAGER_AMBIENT, SoundEvents.VILLAGER_CELEBRATE,
                 SoundEvents.VILLAGER_YES, SoundEvents.VILLAGER_NO
-        };;
+        };
+        ;
 
         public static SoundEvent generateSound() {
             Random rand = new Random();
@@ -265,37 +298,6 @@ public class Utils {
             return gson.fromJson(iterator.next(), String.class);
         }
 
-    }
-
-    public static String resourcePathBuilder(String file_path, String file_name)
-    {
-        return String.format("intelligentvillager:%s" +
-                "/%s", file_path, file_name);
-    }
-
-    public static String nodeConfigBuilder(String name, String prompt){
-        String p0 = prompt.replaceAll("\n","");
-        String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
-                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
-                "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
-                "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
-                "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
-                "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
-                "\"text\": \"$(text)\",\"mode\": \"default\"," +
-                "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
-                " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
-
-        String s1 = String.format(s0, name, "");
-        JsonObject bodyMap = JsonConverter.encodeStringToJson(s1);
-        JsonArray models = bodyMap.getAsJsonArray("models");
-        JsonObject model = models.get(0).getAsJsonObject();
-        JsonArray prompts = new JsonArray();
-        prompts.add(p0);
-        model.add("prompts", prompts);
-        models.set(0, model);
-        bodyMap.add("models", models);
-
-        return JsonConverter.decodeJsonToString(bodyMap);
     }
 
 }
