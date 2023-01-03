@@ -2,8 +2,11 @@ package com.sergio.ivillager;
 
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.gen.feature.structure.Structure;
@@ -13,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.system.CallbackI;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 
@@ -69,6 +73,16 @@ public class NPCVillagerManager {
 
     public List<NPCVillagerEntity> findVillagersAtSameVillage(NPCVillagerEntity entity) {
         String villageName = entity.getCustomVillagename();
+        List<NPCVillagerEntity> r0 = new ArrayList<>();
+        for (VillagerData data:this.villagersData.values()) {
+            if (data.getEntity().getCustomVillagename().equals(villageName) && !data.getEntity().getName().getString().equals("[Awakening...]")){
+                r0.add(data.getEntity());
+            }
+        }
+        return r0;
+    }
+
+    public List<NPCVillagerEntity> findVillagersAtSameVillage(String villageName) {
         List<NPCVillagerEntity> r0 = new ArrayList<>();
         for (VillagerData data:this.villagersData.values()) {
             if (data.getEntity().getCustomVillagename().equals(villageName) && !data.getEntity().getName().getString().equals("[Awakening...]")){
@@ -194,6 +208,42 @@ public class NPCVillagerManager {
                 this.villagersData.size(),nearCustomVillagerList.size()));
 
         return nearCustomVillagerList;
+    }
+
+    public String getVillageNameIronGolemAt (LivingEntity entity) {
+        if (entity instanceof IronGolemEntity) {
+            BlockPos b0 = entity.blockPosition();
+            for (String name:this.villagesList.keySet()){
+                BlockPos villagePos = this.villagesList.get(name);
+                double distance = villagePos.distSqr(b0);
+                if (distance < 100) {
+                    return name;
+                }
+            }
+        }
+        return "Default";
+    }
+
+    public void tellAllVillagersTheirGolemHasBeenKilledByPlayer(IronGolemEntity entity,
+                                                                @Nullable PlayerEntity player){
+        String villageName = getVillageNameIronGolemAt(entity);
+        List<NPCVillagerEntity> villagersListToBeNotified = findVillagersAtSameVillage(villageName);
+        if (villagersListToBeNotified.size() <= 0) {
+            return;
+        }
+
+        StringBuilder description = new StringBuilder();
+        if (player != null) {
+            description.append("Iron Golem in the village is killed by Player ")
+                    .append(player.getName().getString())
+                    .append(" and no longer protecting the village.\n");
+        } else {
+            description.append("Iron Golem in the village is dead and no longer protecting the " +
+                    "village.\n");
+        }
+        for (NPCVillagerEntity villager:villagersListToBeNotified) {
+            villager.getBrain().setMemory(NPCVillagerMod.GOLEM_PROTECTING_MEMORY, description.toString());
+        }
     }
 
     //region GETTER/SETTER

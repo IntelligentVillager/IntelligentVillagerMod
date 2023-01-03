@@ -51,6 +51,9 @@ public class NPCVillagerMod {
     public static final MemoryModuleType<List<NPCVillagerEntity>> COMPATRIOTS_MEMORY_TYPE =
             new MemoryModuleType<List<NPCVillagerEntity>>(Optional.empty());
 
+    public static final MemoryModuleType<String> GOLEM_PROTECTING_MEMORY =
+            new MemoryModuleType<String>(Optional.empty());
+
     public static final MemoryModuleType<Map<String, Long>> PLAYER_ATTACK_HISTORY =
             new MemoryModuleType<Map<String, Long>>(Optional.empty());
 
@@ -123,10 +126,12 @@ public class NPCVillagerMod {
         COMPATRIOTS_MEMORY_TYPE.setRegistryName(Utils.MOD_ID, "compatriots_memory_type");
         PLAYER_ATTACK_HISTORY.setRegistryName(Utils.MOD_ID, "attacked_by_player_memory_type");
         WEATHER_MEMORY.setRegistryName(Utils.MOD_ID, "weather_memory");
+        GOLEM_PROTECTING_MEMORY.setRegistryName(Utils.MOD_ID, "golem_protecting_memory");
 
         event.getRegistry().register(PLAYER_ATTACK_HISTORY);
         event.getRegistry().register(COMPATRIOTS_MEMORY_TYPE);
         event.getRegistry().register(WEATHER_MEMORY);
+        event.getRegistry().register(GOLEM_PROTECTING_MEMORY);
     }
 
     @SubscribeEvent

@@ -18,6 +18,7 @@ import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
 import net.minecraft.entity.ai.brain.sensor.SensorType;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
@@ -32,6 +33,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -204,6 +206,19 @@ public class NPCVillager extends NPCModElement.ModElement {
                     }
                     interactWithEntityWithAction((ServerPlayerEntity) event.getSource().getEntity(), "(punch)", e0);
                 }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onLivingDeathEvent(LivingDeathEvent event) throws Exception {
+        if (event.getEntityLiving() instanceof IronGolemEntity) {
+            if (event.getSource().msgId.equals("player")) {
+                LOGGER.info("Iron Golem has been killed by player");
+                PlayerEntity player = (PlayerEntity) event.getSource().getEntity();
+                NPCVillagerManager.getInstance().tellAllVillagersTheirGolemHasBeenKilledByPlayer((IronGolemEntity) event.getEntityLiving(), player);
+            } else {
+                NPCVillagerManager.getInstance().tellAllVillagersTheirGolemHasBeenKilledByPlayer((IronGolemEntity) event.getEntityLiving(), null);
             }
         }
     }
@@ -411,7 +426,8 @@ public class NPCVillager extends NPCModElement.ModElement {
                         MemoryModuleType.HEARD_BELL_TIME,
                         MemoryModuleType.GOLEM_DETECTED_RECENTLY,
                         NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE,
-                        NPCVillagerMod.PLAYER_ATTACK_HISTORY, NPCVillagerMod.WEATHER_MEMORY);
+                        NPCVillagerMod.PLAYER_ATTACK_HISTORY, NPCVillagerMod.WEATHER_MEMORY,
+                        NPCVillagerMod.GOLEM_PROTECTING_MEMORY);
 
         private static final ImmutableList<SensorType<? extends Sensor<? super NPCVillagerEntity>>> SENSOR_TYPES
                 = ImmutableList.of(SensorType.NEAREST_LIVING_ENTITIES, SensorType.NEAREST_PLAYERS

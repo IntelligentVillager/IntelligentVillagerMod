@@ -159,6 +159,8 @@ public class Utils {
                     brain.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
             Optional<String> optional_weather_memory =
                     brain.getMemory(NPCVillagerMod.WEATHER_MEMORY);
+            Optional<String> optional_golem_protecting =
+                    brain.getMemory(NPCVillagerMod.GOLEM_PROTECTING_MEMORY);
 
             if (optional_livingentities.isPresent()){
                 List<LivingEntity> l0 = optional_livingentities.get();
@@ -178,6 +180,7 @@ public class Utils {
             }
 
             optional_weather_memory.ifPresent(description::append);
+            optional_golem_protecting.ifPresent(description::append);
 
             description.append("\nSecond, there is a dialogue between ")
                     .append(contextEntity.getName().getString())
