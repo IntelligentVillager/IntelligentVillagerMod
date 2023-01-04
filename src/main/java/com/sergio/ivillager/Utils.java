@@ -60,7 +60,7 @@ public class Utils {
     }
 
     public static String nodeConfigBuilder(String name, String prompt) {
-        String p0 = prompt.replaceAll("\n", "");
+        String p0 = prompt.replaceAll("[^\\x20-\\x7E]", "");
         String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
                 "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
                 "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
