@@ -455,6 +455,57 @@ public class NetworkRequestManager {
         return result;
     }
 
+    public static String generateInitialConversation(String APIkey) {
+        try {
+            // Set up the HTTP connection
+            URL url = new URL("https://api.openai.com/v1/completions");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Authorization", String.format("Bearer %s", APIkey));
+
+            String prompt = String.format(Utils.HINT_MESSAGE_FOR_VILLAGER_CONVERSATION,
+                    Utils.randomTopic());
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("prompt", prompt);
+            bodyMap.put("max_tokens", 200);
+            bodyMap.put("model", "text-davinci-003");
+            bodyMap.put("temperature", 0.7);
+            bodyMap.put("top_p", 1);
+            bodyMap.put("frequency_penalty", 0);
+            bodyMap.put("presence_penalty", 0);
+
+            String body = JsonConverter.decodeJsonToString(JsonConverter.encodeMapToJson(bodyMap));
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(body);
+            wr.flush();
+            wr.close();
+
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                return Utils.DEFAULT_MESSAGE_FOR_VILLAGER_CONVERSATION;
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // Parse the response as a JSON object
+            String s0 = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray(
+                    "choices").get(0).getAsJsonObject().get("text").getAsString();
+            s0 = s0.replace("Villager 1:","").replace("\n","").replaceAll("[^\\x20-\\x7E]", "");;
+            return s0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Utils.DEFAULT_MESSAGE_FOR_VILLAGER_CONVERSATION;
+        }
+    }
+
     public enum URLs {
         AUTH_URL("https://sso-int-api-prod.rct.ai/auth/login"),
         ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),

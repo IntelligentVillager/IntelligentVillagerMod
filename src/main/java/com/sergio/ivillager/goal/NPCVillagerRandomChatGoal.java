@@ -129,7 +129,7 @@ public class NPCVillagerRandomChatGoal extends Goal {
     public void stop() {
         if (this.currentTargetEntity != null) {
             if (this.currentTargetEntity.position().distanceTo(this.mob.position()) < closestDistance) {
-                this.mob.interactWithOtherVillager("hey!", this.currentTargetEntity);
+                this.mob.interactWithOtherVillager(null, this.currentTargetEntity);
                 this.mob.setIsTalkingWithOtherVillager(true);
                 this.currentTargetEntity.setIsTalkingWithOtherVillager(true);
                 this.currentTargetEntity.setWalkingControlIsWaitingOtherVillager(false);

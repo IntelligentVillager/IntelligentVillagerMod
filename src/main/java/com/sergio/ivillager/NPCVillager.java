@@ -123,13 +123,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                     }
                 }
 
-                if (NPCVillagerManager.getInstance().findVillagersAtSameVillage(customVillager.getCustomVillagename()).size()<5) {
-                    // add the custom villager to the world
-                    event.getWorld().addFreshEntity(customVillager);
-                    // add the custom villager to singelton manager
-                    NPCVillagerManager.getInstance().addVillager(customVillager);
-                }
-
                 if (Config.IS_REPLACING_ALL_VILLAGERS.get()) {
                     // remove the original villager
                     entity.remove();
@@ -874,7 +867,10 @@ public class NPCVillager extends NPCModElement.ModElement {
                                           NPCVillagerEntity targetVillager) {
             if (targetVillager != null) {
                 targetVillager.setProcessingMessage(true);
-
+                if (originalMsg == null) {
+                    originalMsg =
+                            NetworkRequestManager.generateInitialConversation(Config.OPENAI_API_KEY.get());
+                }
                 NetworkRequestManager.asyncInteractWithNode(targetVillager.getCustomNodePublicId(),
                         originalMsg,
                         response -> {

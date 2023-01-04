@@ -28,15 +28,20 @@ public class Utils {
             "functioning " +
             "properly on this server, please contact the server operator for more support.";
 
+    public static final String HINT_MESSAGE_FOR_VILLAGER_CONVERSATION = "Write a line of dialogue" +
+            " to open up conversations about %s between two Minecraft villagers: \n";
+
+    public static final String DEFAULT_MESSAGE_FOR_VILLAGER_CONVERSATION = "Hey! How's your day?";
+
     public static String randomProfession() {
         String[] professions = {"farmer", "librarian", "blacksmith", "carpenter", "herbalist"};
-        // Create a Random instance
-        Random random = new Random();
+        return professions[new Random().nextInt(professions.length)];
+    }
 
-        // Choose a random element from each array
-        int professionIndex = random.nextInt(professions.length);
-        String profession = professions[professionIndex];
-        return profession;
+    public static String randomTopic() {
+        String[] topics = {"weather", "strange things around the village", "friendship",
+                "family", "hobby"};
+        return topics[new Random().nextInt(topics.length)];
     }
 
     public static String randomVillageNameExclude(List<String> excluded) {
