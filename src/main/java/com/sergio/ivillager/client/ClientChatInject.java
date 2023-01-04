@@ -211,6 +211,7 @@ public class ClientChatInject {
     @OnlyIn(Dist.CLIENT)
     private static void errorMSG(ClientChatReceivedEvent event, String originalMsg, int toEntityID) {
         if (!isPlayerEntitySelf(toEntityID)) {
+            event.setCanceled(true);
             return;
         }
         ITextComponent errorString =
