@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 public class CustomLayerRenderer<T extends LivingEntity, M extends BipedModel<T>> extends LayerRenderer<T,M>{
     private ResourceLocation texture;
     public static final Logger LOGGER = LogManager.getLogger(CustomLayerRenderer.class);
+    public Boolean isVisible = true;
 
     public CustomLayerRenderer(IEntityRenderer<T, M> entityRendererIn) {
         super(entityRendererIn);
@@ -37,6 +38,11 @@ public class CustomLayerRenderer<T extends LivingEntity, M extends BipedModel<T>
         if (this.texture == null){
             return;
         }
+
+        if (!isVisible) {
+            return;
+        }
+
 //        LOGGER.warn("finally rendering!!");
 
         Minecraft mc = Minecraft.getInstance();

@@ -31,7 +31,11 @@ public class NPCVillagerManager {
     // Universal ssotoken
     private String ssoToken = null;
     private Map<UUID, String> accessToken = new HashMap<UUID, String>();
-    private Map<UUID, String> accessKey = new HashMap<UUID, String>();;
+    private Map<UUID, String> accessKey = new HashMap<UUID, String>();
+
+    private String accessToken_default = "";
+    private String accessKey_default = "";
+
     private String openAIAPIKey;
 
     private NPCVillagerManager() {
@@ -161,7 +165,7 @@ public class NPCVillagerManager {
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
                 if (villager.getIsTalkingToPlayer() != null && villager.getIsTalkingToPlayer().getId() == player.getId()) {
-                    if (distance > 6.0 || playerLook.dot(playerToVillager) <= 0) {
+                    if (distance > Utils.CLOSEST_DISTANCE || playerLook.dot(playerToVillager) <= 0) {
                         LOGGER.warn(String.format("[SERVER] Villager %s [%s] no longer talk to " +
                                         "player " +
                                         "%s",
@@ -192,9 +196,12 @@ public class NPCVillagerManager {
     public NPCVillagerEntity findTheNextVillagerToTalkTo (NPCVillagerEntity entity) {
         for (VillagerData data : this.villagersData.values()) {
             NPCVillagerEntity villager = data.getEntity();
-            if (villager.getId() != entity.getId()) {
+            if (villager.getId() != entity.getId() && villager.getHasAwaken()) {
+                // No awaken villager could not be chatted
                 if (villager.getCustomVillagename().equals(entity.getCustomVillagename())){
-                    if (!villager.getNavigation().isInProgress() && !villager.getControlWalkForceTrigger()) {
+                    if (!villager.getNavigation().isInProgress() && !villager.getControlWalkForceTrigger() && !villager.getIsTalkingWithOtherVillager() && !villager.getControlWalkIsWaitingOtherVillager()) {
+                        LOGGER.warn(String.format("Villager %s found %s to talk to.",
+                                entity.getName().getString(), villager.getName().getString()));
                         return villager;
                     }
                 }
@@ -307,7 +314,7 @@ public class NPCVillagerManager {
     //endregion
 
     public Boolean isVerified(){
-        if (this.ssoToken == null || this.accessKey == null || this.accessToken == null) {
+        if (this.ssoToken == null || this.accessKey_default == null || this.accessToken_default == null) {
             return false;
         }
         return true;
@@ -318,6 +325,22 @@ public class NPCVillagerManager {
             return false;
         }
         return true;
+    }
+
+    public String getAccessToken_default() {
+        return accessToken_default;
+    }
+
+    public void setAccessToken_default(String accessToken_default) {
+        this.accessToken_default = accessToken_default;
+    }
+
+    public String getAccessKey_default() {
+        return accessKey_default;
+    }
+
+    public void setAccessKey_default(String accessKey_default) {
+        this.accessKey_default = accessKey_default;
     }
 
     public static class VillagerData {

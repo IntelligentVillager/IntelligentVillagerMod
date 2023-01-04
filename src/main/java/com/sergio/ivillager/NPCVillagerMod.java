@@ -188,6 +188,15 @@ public class NPCVillagerMod {
                 String ssotoken = NetworkRequestManager.getAuthToken(socrates_username, socrates_userpwd);
                 LOGGER.info(String.format("Socrates sso token: %s", ssotoken));
                 NPCVillagerManager.getInstance().setSsoToken(ssotoken);
+
+                try {
+                    Map<String, String> accessKeyandToken =
+                            NetworkRequestManager.getAccessToken(ssotoken);
+                    NPCVillagerManager.getInstance().setAccessKey_default(accessKeyandToken.get("key"));
+                    NPCVillagerManager.getInstance().setAccessToken_default(accessKeyandToken.get("token"));
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                }
             }
 
             // FINISHED: access_token and key contains history messages and context, it should be

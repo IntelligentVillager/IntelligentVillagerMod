@@ -111,23 +111,24 @@ public class NPCVillager extends NPCModElement.ModElement {
             // set the custom villager's position to the village center
 
             if (customVillager != null) {
-                customVillager.setPos(entity.position().x + 1, entity.position().y,
-                        entity.position().z + 1);
+                customVillager.setPos(entity.position().x, entity.position().y,
+                        entity.position().z);
 
                 if (customVillager.getCustomVillagename().equals("")) {
                     String n0 =
                             NPCVillagerManager.getInstance().isEntityLocatedAtVillagesWithName(customVillager,
-                                    new BlockPos(entity.position().x + 1, entity.position().y, entity.position().z + 1));
+                                    new BlockPos(entity.position().x, entity.position().y, entity.position().z));
                     if (n0 != null) {
                         customVillager.setCustomVillagename(n0);
                     }
                 }
 
-                // add the custom villager to the world
-                event.getWorld().addFreshEntity(customVillager);
-
-                // add the custom villager to singelton manager
-                NPCVillagerManager.getInstance().addVillager(customVillager);
+                if (NPCVillagerManager.getInstance().findVillagersAtSameVillage(customVillager.getCustomVillagename()).size()<5) {
+                    // add the custom villager to the world
+                    event.getWorld().addFreshEntity(customVillager);
+                    // add the custom villager to singelton manager
+                    NPCVillagerManager.getInstance().addVillager(customVillager);
+                }
 
                 if (Config.IS_REPLACING_ALL_VILLAGERS.get()) {
                     // remove the original villager
@@ -145,9 +146,23 @@ public class NPCVillager extends NPCModElement.ModElement {
                 Vector3d villagerPos = obj.position();
                 Vector3d playerToVillager = villagerPos.subtract(playerPos);
                 double distance = playerToVillager.length();
-                if (distance <= 6.0) {
+                if (distance <= Utils.CLOSEST_DISTANCE) {
                     obj.sendMessage(msg, obj.getUUID());
                 }
+            }
+        }
+    }
+
+    private static void broadcastToOtherPlayerInInteractiveRange(NPCVillagerEntity entity,
+                                                                 ITextComponent msg) {
+        List<ServerPlayerEntity> s0 = entity.level.getServer().getPlayerList().getPlayers();
+        for (ServerPlayerEntity obj : s0) {
+            Vector3d playerPos = obj.position();
+            Vector3d villagerPos = entity.position();
+            Vector3d playerToVillager = playerPos.subtract(villagerPos);
+            double distance = playerToVillager.length();
+            if (distance <= Utils.CLOSEST_DISTANCE) {
+                obj.sendMessage(msg, obj.getUUID());
             }
         }
     }
@@ -156,7 +171,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                                                      NPCVillagerEntity obj) {
         if (obj != null) {
             obj.setIsTalkingToPlayer(player);
-//            obj.goalSelector.disableControlFlag(Goal.Flag.MOVE);
             obj.setProcessingMessage(true);
 
             NetworkRequestManager.asyncInteractWithNode(player.getUUID(), obj.getCustomNodePublicId(),
@@ -220,21 +234,35 @@ public class NPCVillager extends NPCModElement.ModElement {
     private static void respondToPotentialActionResponse(ServerPlayerEntity player, String originalMsg,
                                                          NPCVillagerEntity f0) {
         f0.getLookControl().setLookAt(player.position());
+        processActionAndTag(originalMsg, f0);
+    }
 
+    private static void respondToPotentialActionResponse(NPCVillagerEntity listeningVillager,
+                                                         String originalMsg,
+                                                         NPCVillagerEntity actionVillager) {
+        actionVillager.getLookControl().setLookAt(listeningVillager.position());
+        processActionAndTag(originalMsg, actionVillager);
+    }
+
+    private static void processActionAndTag(String originalMsg, NPCVillagerEntity actionVillager) {
         Pattern pattern = Pattern.compile("\\(.*\\)");
         boolean hasParentheses = pattern.matcher(originalMsg).find();
 
         if (hasParentheses) {
             if (originalMsg.contains("(jump)")) {
-                f0.getJumpControl().jump();
+                actionVillager.getJumpControl().jump();
             }
 
             if (originalMsg.contains("(run away)")) {
-                f0.setWalkingControlForceTrigger(true);
+                actionVillager.setWalkingControlForceTrigger(true);
+            }
+
+            if (originalMsg.contains("(think)")) {
+                actionVillager.setCustomTag("think");
             }
         }
 
-        f0.playTalkSound();
+        actionVillager.playTalkSound();
     }
 
     @Override
@@ -400,7 +428,12 @@ public class NPCVillager extends NPCModElement.ModElement {
         private static final DataParameter<String> CUSTOM_PROFESSION = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
         private static final DataParameter<String> CUSTOM_VILLAGENAME = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
         private static final DataParameter<String> CUSTOM_NAME_COLOR = EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+        private static final DataParameter<String> CUSTOM_TAG =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.STRING);
+
         private static final DataParameter<Boolean> HAS_AWAKEN =
+                EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.BOOLEAN);
+        private static final DataParameter<Boolean> IS_TALKING_WITH_OTHER_VILLAGER =
                 EntityDataManager.defineId(NPCVillagerEntity.class, DataSerializers.BOOLEAN);
         private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES =
                 ImmutableList.of(MemoryModuleType.LIVING_ENTITIES,
@@ -483,6 +516,8 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.entityData.define(HAS_AWAKEN, false);
             this.entityData.define(WALKING_CONTROL_FORCE_TRIGGER, false);
             this.entityData.define(WALKING_CONTROL_IS_WAITING_OTHER_VILLAGER, false);
+            this.entityData.define(IS_TALKING_WITH_OTHER_VILLAGER,false);
+            this.entityData.define(CUSTOM_TAG,"");
         }
 
         protected void customServerAiStep() {
@@ -520,12 +555,10 @@ public class NPCVillager extends NPCModElement.ModElement {
             //  NPCVillagerManager) and reply
             // TODO: Villagers need to add a goal to talk to each other, randomly go to the nearby villagers to chat
             // TODO: Players can only receive messages from villagers chatting with each other if they are close to the villagers they are talking to
-
             this.goalSelector.addGoal(2, new NPCVillagerTalkGoal(this));
             this.goalSelector.addGoal(1, new NPCVillagerLookRandomlyGoal(this));
             this.goalSelector.addGoal(6, new NPCVillagerWalkingGoal(this, 1.0f));
             this.goalSelector.addGoal(3, new NPCVillagerRandomChatGoal(this, 1.0f));
-
         }
 
         // FINISHED: Play sound when villager talk
@@ -546,6 +579,14 @@ public class NPCVillager extends NPCModElement.ModElement {
         }
 
         //region GETTER/SETTER for all custom data
+
+        public Boolean getIsTalkingWithOtherVillager(){
+            return this.entityData.get(IS_TALKING_WITH_OTHER_VILLAGER);
+        }
+
+        public void setIsTalkingWithOtherVillager(Boolean flag) {
+            this.entityData.set(IS_TALKING_WITH_OTHER_VILLAGER, flag);
+        }
 
         public Boolean getControlWalkIsWaitingOtherVillager() {
             return this.entityData.get(WALKING_CONTROL_IS_WAITING_OTHER_VILLAGER);
@@ -578,6 +619,14 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void setHasAwaken(Boolean flag) {
             this.entityData.set(HAS_AWAKEN, flag);
+        }
+
+        public String getCustomTag() {
+            return this.entityData.get(CUSTOM_TAG);
+        }
+
+        public void setCustomTag(String s0) {
+            this.entityData.set(CUSTOM_TAG, s0);
         }
 
         public String getCustomSkin() {
@@ -819,6 +868,47 @@ public class NPCVillager extends NPCModElement.ModElement {
                     return null;
                 }
             }).thenAccept(callback);
+        }
+
+        public void interactWithOtherVillager(String originalMsg,
+                                          NPCVillagerEntity targetVillager) {
+            if (targetVillager != null) {
+                targetVillager.setProcessingMessage(true);
+
+                NetworkRequestManager.asyncInteractWithNode(targetVillager.getCustomNodePublicId(),
+                        originalMsg,
+                        response -> {
+                            Map<String, Object> j0 = new HashMap<String, Object>();
+                            j0.put("from_entity", targetVillager.getId());
+                            j0.put("to_entity", this.getId());
+                            if (response != null) {
+                                j0.put("code", 200);
+                                j0.put("msg", response.trim());
+                            } else {
+                                j0.put("code", 0);
+                                j0.put("msg", Utils.ERROR_MESSAGE);
+                            }
+
+                            if (response != null) {
+                                respondToPotentialActionResponse(this, response.trim(),
+                                        targetVillager);
+                            }
+
+                            targetVillager.setProcessingMessage(false);
+
+                            ITextComponent msg = new StringTextComponent(String.format("<villager" +
+                                    " response>%s", Utils.JsonConverter.encodeMapToJsonString(j0)));
+                            broadcastToOtherPlayerInInteractiveRange(this, msg);
+
+                            if (response != null) {
+                                if (targetVillager.position().distanceTo(this.position()) <= Utils.CLOSEST_DISTANCE) {
+                                    targetVillager.setIsTalkingWithOtherVillager(true);
+                                    this.setIsTalkingWithOtherVillager(true);
+                                    targetVillager.interactWithOtherVillager(response.trim(), this);
+                                }
+                            }
+                        });
+            }
         }
     }
 }

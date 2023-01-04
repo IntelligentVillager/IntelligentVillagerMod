@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -120,10 +121,11 @@ public class NetworkRequestManager {
         }
     }
 
-    @Deprecated
-    public static CompletableFuture<Void> asyncInteractWithNode(String nodeId, String text, Consumer<String> callback) {
-        return CompletableFuture.supplyAsync(() -> {
+    public static void asyncInteractWithNode(String nodeId, String text, Consumer<String> callback) {
+        CompletableFuture.supplyAsync(() -> {
             try {
+                Thread.sleep(Duration.ofSeconds(4).toMillis());
+
                 if (!NPCVillagerManager
                         .getInstance().isVerified()) {
                     // authentication information not set in config yet
@@ -134,10 +136,10 @@ public class NetworkRequestManager {
                         NetworkRequestManager.sendPostRequest(String.format(URLs.INTERACT_URL.getUrl(), nodeId,
                                         NPCVillagerManager
                                                 .getInstance()
-                                                .getAccessKey(),
+                                                .getAccessKey_default(),
                                         NPCVillagerManager
                                                 .getInstance()
-                                                .getAccessToken()),
+                                                .getAccessToken_default()),
                                 String.format("{\"text" +
                                         "\":\"%s\"}", text));
                 JsonObject resultJson =
@@ -159,8 +161,8 @@ public class NetworkRequestManager {
         }).thenAccept(callback);
     }
 
-    public static CompletableFuture<Void> asyncInteractWithNode(UUID PlayerId, String nodeId, String text, Consumer<String> callback) {
-        return CompletableFuture.supplyAsync(() -> {
+    public static void asyncInteractWithNode(UUID PlayerId, String nodeId, String text, Consumer<String> callback) {
+        CompletableFuture.supplyAsync(() -> {
             try {
                 if (!NPCVillagerManager
                         .getInstance().isVerified(PlayerId)) {

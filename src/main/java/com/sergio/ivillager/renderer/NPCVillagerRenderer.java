@@ -79,6 +79,11 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
 
     public void render(NPCVillagerEntity p_225623_1_, float p_225623_2_, float p_225623_3_, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int p_225623_6_) {
         this.setModelProperties(p_225623_1_);
+        if (p_225623_1_.getCustomTag().equals("")) {
+            customLayerRenderer.isVisible = false;
+        } else {
+            customLayerRenderer.isVisible = true;
+        }
 
         if (p_225623_1_.swing_custom_flag) {
             this.model.attackTime = p_225623_1_.attackAnim_custom;

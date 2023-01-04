@@ -46,6 +46,9 @@ public class NPCVillagerWalkingGoal extends Goal {
                 this.wantedX = vector3d.x;
                 this.wantedY = vector3d.y;
                 this.wantedZ = vector3d.z;
+                // Force to runaway
+                this.mob.setIsTalkingWithOtherVillager(false);
+                this.mob.setWalkingControlIsWaitingOtherVillager(false);
                 this.mob.setWalkingControlForceTrigger(false);
                 return true;
             }
@@ -54,14 +57,16 @@ public class NPCVillagerWalkingGoal extends Goal {
         if (this.mob.isVehicle() || this.mob.getIsTalkingToPlayer() != null) {
             return false;
         } else {
-            if (!this.mob.getControlWalkForceTrigger()) {
-                if (this.checkNoActionTime && this.mob.getNoActionTime() >= 100) {
-                    return false;
-                }
+            if(this.mob.getIsTalkingWithOtherVillager() || this.mob.getControlWalkIsWaitingOtherVillager()) {
+                return false;
+            }
 
-                if (this.mob.getRandom().nextInt(this.interval) != 0) {
-                    return false;
-                }
+            if (this.checkNoActionTime && this.mob.getNoActionTime() >= 100) {
+                return false;
+            }
+
+            if (this.mob.getRandom().nextInt(this.interval) != 0) {
+                return false;
             }
 
             Vector3d vector3d = this.getPosition();
