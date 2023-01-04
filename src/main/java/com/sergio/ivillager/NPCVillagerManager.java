@@ -59,6 +59,8 @@ public class NPCVillagerManager {
                 String n0 = isEntityLocatedAtVillagesWithName(villager);
                 if (n0 != null) {
                     villager.setCustomVillagename(n0);
+                } else {
+                    villager.setCustomVillagename("Noman's Land");
                 }
             } else {
                 setVillageNameWithVillager(villager);

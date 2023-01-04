@@ -19,7 +19,7 @@ import java.util.*;
 
 public class Utils {
     public static final String MOD_ID = "intelligentvillager";
-    public static final int ENTITYINTELLIGENCE_TICKING_INTERVAL = 200;
+    public static final int ENTITYINTELLIGENCE_TICKING_INTERVAL = 1000;
     public static final double CLOSEST_DISTANCE = 7.0F;
 
     public static final String TEST_NODE_ID = "9dcf5d19-5c4c-4ae0-a75d-56ad27ea892b";

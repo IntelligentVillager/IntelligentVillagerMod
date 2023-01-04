@@ -867,10 +867,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                                           NPCVillagerEntity targetVillager) {
             if (targetVillager != null) {
                 targetVillager.setProcessingMessage(true);
-                if (originalMsg == null) {
-                    originalMsg =
-                            NetworkRequestManager.generateInitialConversation(Config.OPENAI_API_KEY.get());
-                }
                 NetworkRequestManager.asyncInteractWithNode(targetVillager.getCustomNodePublicId(),
                         originalMsg,
                         response -> {

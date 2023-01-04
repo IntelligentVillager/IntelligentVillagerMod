@@ -2,6 +2,7 @@ package com.sergio.ivillager;
 
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.Utils.JsonConverter;
+import com.sergio.ivillager.config.Config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -121,7 +122,8 @@ public class NetworkRequestManager {
         }
     }
 
-    public static void asyncInteractWithNode(String nodeId, String text, Consumer<String> callback) {
+    public static void asyncInteractWithNode(String nodeId, String originalMsg,
+                                             Consumer<String> callback) {
         CompletableFuture.supplyAsync(() -> {
             try {
                 Thread.sleep(Duration.ofSeconds(4).toMillis());
@@ -130,6 +132,11 @@ public class NetworkRequestManager {
                         .getInstance().isVerified()) {
                     // authentication information not set in config yet
                     return null;
+                }
+
+                String text = originalMsg;
+                if (text == null) {
+                    text = generateInitialConversation(Config.OPENAI_API_KEY.get());
                 }
 
                 String resultStr =
