@@ -34,9 +34,9 @@ logoFile="logo.png" #optional
 authors="Sergio/Marco" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Make your villagers intelligent into infinite possibilities with AI generated souls. Each of them
- has unique personality as well as knowing about all the context around them. Talk to them with Natural Language and interact with them like a real player living in this world!
-
+Make your villagers intelligent with AI generated souls.
+Each of them has unique personality as well as knowing about all the context around them.
+Talk to them with Natural Language and interact with them like a real player living in this world!
 Make friends with them and explore the world with procedural generated narratives!
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
