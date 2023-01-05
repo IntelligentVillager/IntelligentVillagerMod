@@ -31,7 +31,7 @@ logoFile="logo.png" #optional
 # A text field displayed in the mod UI
 #credits="" #optional
 # A text field displayed in the mod UI
-authors="Sergio" #optional
+authors="Sergio/Marco" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
 Make your villagers intelligent into infinite possibilities with AI generated souls. Each of them
