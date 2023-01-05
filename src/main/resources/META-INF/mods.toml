@@ -19,22 +19,25 @@ modId="intelligentvillager" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
 # ${file.jarVersion} will substitute the value of the Implementation-Version as read from the mod's JAR file metadata
 # see the associated build.gradle script for how to populate this completely automatically during a build
-version="0.0.1" #mandatory
+version="0.0.5" #mandatory
  # A display name for the mod
 displayName="Intelligent Villager" #mandatory
 # A URL to query for updates for this mod. See the JSON update specification https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 # A URL for the "homepage" for this mod, displayed in the mod UI
-#displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
+displayURL="http://intelligentvillager.com" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="examplemod.png" #optional
+logoFile="logo.png" #optional
 # A text field displayed in the mod UI
-credits="" #optional
+#credits="" #optional
 # A text field displayed in the mod UI
 authors="Sergio" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Fuck test.
+Make your villagers intelligent into infinite possibilities with AI generated souls. Each of them
+ has unique personality as well as knowing about all the context around them. Talk to them with Natural Language and interact with them like a real player living in this world!
+
+Make friends with them and explore the world with procedural generated narratives!
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.npctest]] #optional
