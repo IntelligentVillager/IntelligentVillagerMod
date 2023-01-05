@@ -1,5 +1,6 @@
 # IntelligentVillagerMod
 
+![](/src/main/resources/logo.png)
 
 Source installation information for modders
 -------------------------------------------
