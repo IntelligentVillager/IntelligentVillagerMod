@@ -1,12 +1,10 @@
 package com.sergio.ivillager;
 
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.gen.feature.structure.Structure;
@@ -14,7 +12,6 @@ import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.server.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.system.CallbackI;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -91,7 +88,7 @@ public class NPCVillagerManager {
     public List<NPCVillagerEntity> findVillagersAtSameVillage(String villageName) {
         List<NPCVillagerEntity> r0 = new ArrayList<>();
         for (VillagerData data:this.villagersData.values()) {
-            if (data.getEntity().getCustomVillagename().equals(villageName) && !data.getEntity().getName().getString().equals("[Awakening...]")){
+            if (data.getEntity().getCustomVillagename().equals(villageName)){
                 r0.add(data.getEntity());
             }
         }
