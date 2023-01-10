@@ -796,7 +796,7 @@ public class NPCVillager extends NPCModElement.ModElement {
 
             NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
                     this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
-                            , this.getCustomContext()));
+                            , this.getCustomContext()), response -> {});
         }
 
         public void generateIntelligence() {
@@ -866,7 +866,7 @@ public class NPCVillager extends NPCModElement.ModElement {
                     e.printStackTrace();
                     return null;
                 }
-            }).thenAccept(callback);
+            },NetworkRequestManager.executor).thenAccept(callback);
         }
 
         public void interactWithOtherVillager(String originalMsg,

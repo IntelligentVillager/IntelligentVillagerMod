@@ -15,12 +15,16 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class NetworkRequestManager {
 
     public static final Logger LOGGER = LogManager.getLogger(NetworkRequestManager.class);
     private static final String USER_AGENT = "Mozilla/5.0";
+
+    public static Executor executor = Executors.newFixedThreadPool(50);
 
     public static String getAuthToken(String email, String password) {
         try {
@@ -63,9 +67,8 @@ public class NetworkRequestManager {
             return result;
         }
     }
-
     public static Boolean setNodePrompt(String name, String ssoToken, String nodeId,
-                                        String backgroundInfo) {
+                                     String backgroundInfo) {
         try {
             Map<String, String> data = new HashMap<>();
             data.put("x-sso-token", ssoToken);
@@ -89,6 +92,35 @@ public class NetworkRequestManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static void setNodePrompt(String name, String ssoToken, String nodeId,
+                                        String backgroundInfo, Consumer<Boolean> callback) {
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                Map<String, String> data = new HashMap<>();
+                data.put("x-sso-token", ssoToken);
+
+                String body = Utils.nodeConfigBuilder(name, backgroundInfo);
+
+                String resultStr =
+                        NetworkRequestManager.sendPutRequestWithHeader(String.format(
+                                        URLs.SET_NODE_URL.getUrl(), nodeId)
+                                , data, body);
+                JsonObject resultJson =
+                        JsonConverter.encodeStringToJson(resultStr);
+                if (0 == resultJson.get("code").getAsInt()) {
+                    return true;
+                } else {
+                    LOGGER.error(resultStr);
+                    return false;
+                }
+            } catch (Exception e) {
+                LOGGER.error(e);
+                e.printStackTrace();
+                return false;
+            }
+        }, executor).thenAccept(callback);
     }
 
     public static Map<String, String> getAccessToken(String ssoToken) {
@@ -165,7 +197,7 @@ public class NetworkRequestManager {
                 e.printStackTrace();
                 return e.getMessage();
             }
-        }).thenAccept(callback);
+        }, executor).thenAccept(callback);
     }
 
     public static void asyncInteractWithNode(UUID PlayerId, String nodeId, String text, Consumer<String> callback) {
@@ -203,7 +235,7 @@ public class NetworkRequestManager {
                 e.printStackTrace();
                 return e.getMessage();
             }
-        }).thenAccept(callback);
+        }, executor).thenAccept(callback);
     }
 
     public static String sendPutRequestWithHeader(String url, Map<String, String> payload,
@@ -356,7 +388,7 @@ public class NetworkRequestManager {
         in.close();
         con.disconnect();
 
-        LOGGER.info("Response : " + response.toString());
+//        LOGGER.info("Response : " + response.toString());
 
         return response.toString();
     }
@@ -505,7 +537,8 @@ public class NetworkRequestManager {
             // Parse the response as a JSON object
             String s0 = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray(
                     "choices").get(0).getAsJsonObject().get("text").getAsString();
-            s0 = s0.replace("Villager 1:","").replace("\n","").replaceAll("[^\\x20-\\x7E]", "");;
+            s0 = s0.replace("Villager 1:", "").replace("\n", "").replaceAll("[^\\x20-\\x7E]", "");
+            ;
             return s0;
         } catch (Exception e) {
             e.printStackTrace();
