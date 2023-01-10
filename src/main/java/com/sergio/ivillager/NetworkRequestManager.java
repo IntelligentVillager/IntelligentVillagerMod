@@ -538,7 +538,7 @@ public class NetworkRequestManager {
             String s0 = JsonConverter.encodeStringToJson(response.toString()).getAsJsonArray(
                     "choices").get(0).getAsJsonObject().get("text").getAsString();
             s0 = s0.replace("Villager 1:", "").replace("\n", "").replaceAll("[^\\x20-\\x7E]", "");
-            ;
+            
             return s0;
         } catch (Exception e) {
             e.printStackTrace();
