@@ -28,10 +28,6 @@ public class NetworkRequestManager {
 
     public static String getAuthToken(String email, String password) {
         try {
-            Map<String, String> data = new HashMap<>();
-            data.put("email", email);
-            data.put("password", password);
-
             String result = NetworkRequestManager.sendPostRequest(URLs.AUTH_URL.getUrl(), String.format("{\"email\":\"%s\", \"password\":\"%s\"}", email, password));
             return JsonConverter.encodeStringToJson(result).getAsJsonObject("data").get("ssotoken").getAsString();
         } catch (Exception e) {
