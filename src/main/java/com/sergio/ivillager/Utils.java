@@ -263,11 +263,11 @@ public class Utils {
             req.addProperty("villager_name", contextEntity.getName().getString());
 
             if (optional_weather_memory.isPresent()) {
-                req.addProperty("weather", contextEntity.getName().getString());
+                req.addProperty("weather", optional_weather_memory.get());
             }
 
             if (optional_golem_protecting.isPresent()) {
-                req.addProperty("golem_protection", contextEntity.getName().getString());
+                req.addProperty("golem_protection", optional_golem_protecting.get());
             }
             return g.toJson(req);
         }
