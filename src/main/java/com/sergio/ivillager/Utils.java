@@ -4,16 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerList;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
-import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 
 import java.util.*;
 
@@ -182,6 +181,97 @@ public class Utils {
     }
 
     public static class ContextBuilder {
+
+        public static String build_prompt_request_body(Brain<NPCVillagerEntity> brain,
+                                                      NPCVillagerEntity contextEntity) {
+            Optional<List<LivingEntity>> optional_livingentities =
+                    brain.getMemory(MemoryModuleType.LIVING_ENTITIES);
+            Optional<List<LivingEntity>> optional_livingentities_visible =
+                    brain.getMemory(MemoryModuleType.VISIBLE_LIVING_ENTITIES);
+            Optional<List<NPCVillagerEntity>> optional_villagers_in_town =
+                    brain.getMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
+            Optional<Map<String, Long>> optional_player_attack_history =
+                    brain.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
+            Optional<String> optional_weather_memory =
+                    brain.getMemory(NPCVillagerMod.WEATHER_MEMORY);
+            Optional<String> optional_golem_protecting =
+                    brain.getMemory(NPCVillagerMod.GOLEM_PROTECTING_MEMORY);
+            JsonObject req = new JsonObject();
+            Gson g = new Gson();
+
+            Map<String, List<String>> livingEntities = new HashMap<>();
+            if (optional_livingentities.isPresent()) {
+                List<LivingEntity> entities = optional_livingentities.get();
+                if (entities.size() > 0) {
+                    for (LivingEntity entity : entities) {
+                        String type = "villager";
+                        if (entity instanceof NPCVillagerEntity) {
+                            type = "villager";
+                        } else if (entity instanceof PlayerEntity) {
+                            type = "player";
+                        } else {
+                            type = "other";
+                        }
+                        List<String> villagers = new ArrayList<>();
+                        if (livingEntities.containsKey(type)) {
+                            villagers = livingEntities.get(type);
+                        }
+                        villagers.add(entity.getName().getString());
+                        livingEntities.put(type, villagers);
+
+                    }
+                }
+            }
+            req.add("living_entities", g.toJsonTree(livingEntities));
+
+
+            Map<String, List<String>> otherVillagers = new HashMap<>();
+
+            if (optional_villagers_in_town.isPresent()) {
+                List<NPCVillagerEntity> entities = optional_villagers_in_town.get();
+                if (entities.size() > 0) {
+                    for (NPCVillagerEntity entity : entities) {
+                        String type = entity.getCustomProfession();
+                        List<String> villagers = new ArrayList<>();
+                        if (otherVillagers.containsKey(type)) {
+                            villagers = otherVillagers.get(type);
+                        }
+                        villagers.add(entity.getName().getString());
+                        otherVillagers.put(type, villagers);
+                    }
+                }
+            }
+
+
+            req.add("other_villagers", g.toJsonTree(otherVillagers));
+
+
+            Map<String, Long> history = new HashMap<>();
+            if (optional_player_attack_history.isPresent()) {
+                Map<String, Long> m0 = optional_player_attack_history.get();
+                MinecraftServer s1 = contextEntity.getServer();
+                if (s1 != null) {
+                    for (String uuid : m0.keySet()) {
+                        ServerPlayerEntity p0 = s1.getPlayerList().getPlayer(UUID.fromString(uuid));
+                        String name = p0.getName().getString();
+                        history.put(name, m0.get(uuid));
+                    }
+                }
+            }
+            req.add("player_attack_history", g.toJsonTree(history));
+            req.addProperty("village_name", contextEntity.getCustomVillagename());
+            req.addProperty("villager_name", contextEntity.getName().getString());
+
+            if (optional_weather_memory.isPresent()) {
+                req.addProperty("weather", contextEntity.getName().getString());
+            }
+
+            if (optional_golem_protecting.isPresent()) {
+                req.addProperty("golem_protection", contextEntity.getName().getString());
+            }
+            return g.toJson(req);
+        }
+
         public static String build(Brain<NPCVillagerEntity> brain,
                                    NPCVillagerEntity contextEntity) {
 

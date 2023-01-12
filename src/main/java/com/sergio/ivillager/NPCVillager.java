@@ -786,17 +786,29 @@ public class NPCVillager extends NPCModElement.ModElement {
             if (!this.getHasAwaken()) {
                 return;
             }
-            String c0 = Utils.ContextBuilder.build(this.getBrain(), this);
-            this.setCustomContext(c0);
 
-            String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
-            if ((ssotoken == null) || ssotoken.equals("")) {
-                return;
-            }
+            String req = Utils.ContextBuilder.build_prompt_request_body(this.getBrain(), this);
 
-            NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
-                    this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
-                            , this.getCustomContext()), response -> {});
+            NetworkRequestManager.buildPrompt(req, prompt -> {
+
+                if (Objects.equals(prompt, "")) {
+                    LOGGER.warn("get empty prompt from server");
+                    // backup
+                    prompt = Utils.ContextBuilder.build(this.getBrain(), this);
+                }
+
+                this.setCustomContext(prompt);
+
+                String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
+                if ((ssotoken == null) || ssotoken.equals("")) {
+                    return;
+                }
+
+                NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
+                        this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
+                                , this.getCustomContext()), response -> {});
+            });
+
         }
 
         public void generateIntelligence() {

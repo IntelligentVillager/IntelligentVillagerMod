@@ -10,10 +10,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -118,6 +115,33 @@ public class NetworkRequestManager {
             }
         }, executor).thenAccept(callback);
     }
+
+
+    public static void buildPrompt(String req, Consumer<String> callback) {
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                Map<String, String> data = new HashMap<>();
+
+                String body = req;
+
+                String url = Config.PROMPT_SERVER_URL.get();
+                if (Objects.equals(url, "")) {
+                    LOGGER.error("prompt server url is empty, please set in config file");
+                    return "";
+                }
+                String resultStr =
+                        NetworkRequestManager.sendPostRequestWithHeader(url, data, body);
+                JsonObject resultJson =
+                        JsonConverter.encodeStringToJson(resultStr);
+                return resultJson.get("prompt").getAsString();
+            } catch (Exception e) {
+                LOGGER.error(e);
+                e.printStackTrace();
+                return "";
+            }
+        }, executor).thenAccept(callback);
+    }
+
 
     public static Map<String, String> getAccessToken(String ssoToken) {
         Map<String, String> result = new HashMap<>();

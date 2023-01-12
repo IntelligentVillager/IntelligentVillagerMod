@@ -18,6 +18,7 @@ public class Config {
     public static ForgeConfigSpec.ConfigValue<String> SOCRATES_EMAIL;
     public static ForgeConfigSpec.ConfigValue<String> SOCRATES_PWD;
     public static ForgeConfigSpec.ConfigValue<String> OPENAI_API_KEY;
+    public static ForgeConfigSpec.ConfigValue<String> PROMPT_SERVER_URL;
 
     public static ForgeConfigSpec.ConfigValue<Boolean> IS_REPLACING_ALL_VILLAGERS;
 
@@ -29,6 +30,8 @@ public class Config {
         SOCRATES_PWD = COMMON_BUILDER.comment("Socrates User Password ").define("PWD"
                 , "");
         OPENAI_API_KEY = COMMON_BUILDER.comment("OpenAI API key ").define("OPENAI_API_KEY"
+                , "");
+        PROMPT_SERVER_URL = COMMON_BUILDER.comment("Prompt server url ").define("PROMPT_SERVER_URL"
                 , "");
         IS_REPLACING_ALL_VILLAGERS =
                 COMMON_BUILDER.comment("Replacing all the original villagers or keep both").define(
