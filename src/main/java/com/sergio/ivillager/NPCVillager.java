@@ -8,7 +8,6 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.serialization.Dynamic;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
-import com.sergio.ivillager.goal.NPCVillagerRandomChatGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
 import net.minecraft.command.CommandSource;
@@ -50,7 +49,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
@@ -69,6 +67,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @NPCModElement.ModElement.Tag
@@ -247,6 +246,17 @@ public class NPCVillager extends NPCModElement.ModElement {
         Pattern pattern = Pattern.compile("\\(.*\\)");
         boolean hasParentheses = pattern.matcher(originalMsg).find();
 
+        Pattern pattern1 = Pattern.compile("\\((.*?)\\)");
+
+        Matcher macher = pattern1.matcher(originalMsg);
+        actionVillager.setCustomTag("");
+        if (macher.find()) {
+            String action = macher.group(1);
+            if (Config.ActionToEmoji.containsKey(action)) {
+                actionVillager.setCustomTag(Config.ActionToEmoji.get(action));
+            }
+        }
+
         if (hasParentheses) {
             if (originalMsg.contains("(jump)")) {
                 actionVillager.getJumpControl().jump();
@@ -256,9 +266,11 @@ public class NPCVillager extends NPCModElement.ModElement {
                 actionVillager.setWalkingControlForceTrigger(true);
             }
 
-            if (originalMsg.contains("(think)")) {
-                actionVillager.setCustomTag("think");
-            }
+//            if (originalMsg.contains("(think)")) {
+//                actionVillager.setCustomTag("\uD83E\uDD14");  // 🤔
+//            } else {
+//                actionVillager.setCustomTag("");
+//            }
         }
 
         actionVillager.playTalkSound();
@@ -557,7 +569,7 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.goalSelector.addGoal(2, new NPCVillagerTalkGoal(this));
             this.goalSelector.addGoal(1, new NPCVillagerLookRandomlyGoal(this));
             this.goalSelector.addGoal(6, new NPCVillagerWalkingGoal(this, 1.0f));
-            this.goalSelector.addGoal(3, new NPCVillagerRandomChatGoal(this, 1.0f));
+//            this.goalSelector.addGoal(3, new NPCVillagerRandomChatGoal(this, 1.0f));
         }
 
         // FINISHED: Play sound when villager talk

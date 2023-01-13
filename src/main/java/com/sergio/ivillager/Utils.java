@@ -62,7 +62,6 @@ public class Utils {
         return String.format("intelligentvillager:%s" +
                 "/%s", file_path, file_name);
     }
-
     public static String nodeConfigBuilder(String name, String prompt) {
         String p0 = prompt.replaceAll("[^\\x20-\\x7E]", "");
         String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +

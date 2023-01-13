@@ -1,6 +1,7 @@
 package com.sergio.ivillager.renderer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.sergio.ivillager.EmojiManager;
 import com.sergio.ivillager.Utils;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
@@ -83,6 +84,10 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
             customLayerRenderer.isVisible = false;
         } else {
             customLayerRenderer.isVisible = true;
+            ResourceLocation texture = EmojiManager.getInstance().getTextureByEmoji(p_225623_1_.getCustomTag());
+            if (texture != null) {
+                customLayerRenderer.setTexture(texture);
+            }
         }
 
         if (p_225623_1_.swing_custom_flag) {
@@ -111,8 +116,8 @@ public class NPCVillagerRenderer extends LivingRenderer<NPCVillagerEntity, Biped
     }
 
     public ResourceLocation getTextureLocation(NPCVillagerEntity p_110775_1_) {
-        this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(
-                "textures/entities", "sss.png")));
+//        this.customLayerRenderer.setTexture(new ResourceLocation(Utils.resourcePathBuilder(
+//                "textures/entities", "sss.png")));
         return new ResourceLocation(Utils.resourcePathBuilder("textures/entities",
                 p_110775_1_.getCustomSkin() + ".png"));
     }

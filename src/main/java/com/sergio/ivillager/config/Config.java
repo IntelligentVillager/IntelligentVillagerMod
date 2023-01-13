@@ -4,6 +4,11 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 public class Config {
 
@@ -22,6 +27,10 @@ public class Config {
 
     public static ForgeConfigSpec.ConfigValue<Boolean> IS_REPLACING_ALL_VILLAGERS;
 
+    public static ForgeConfigSpec.ConfigValue<List<String>> ACTION_TO_EMOJI;
+
+    public static Map<String, String> ActionToEmoji;
+
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
         COMMON_BUILDER.comment("General settings").push("general");
@@ -37,9 +46,20 @@ public class Config {
                 COMMON_BUILDER.comment("Replacing all the original villagers or keep both").define(
                 "IS_REPLACING_ALL_VILLAGERS"
                 , true);
+        List<String> defaultEmoji = new ArrayList<>();
+        defaultEmoji.add("think=🤔");
+        defaultEmoji.add("cry=😂");
+        ACTION_TO_EMOJI =
+                COMMON_BUILDER.comment("Action to emoji mapping").define("ACTION_TO_EMOJI", defaultEmoji);
 
         COMMON_BUILDER.pop();
         COMMON_CONFIG = COMMON_BUILDER.build();
+
+        ActionToEmoji = new HashMap<>();
+        for (String item : ACTION_TO_EMOJI.get()) {
+            String[] kv = item.split("=");
+            ActionToEmoji.put(kv[0], kv[1]);
+        }
     }
 
 }
