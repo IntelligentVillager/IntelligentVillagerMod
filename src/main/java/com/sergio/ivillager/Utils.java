@@ -11,6 +11,9 @@ import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.SoundEvents;
@@ -196,6 +199,25 @@ public class Utils {
 
     public static class ContextBuilder {
 
+        public static JsonObject build_item_stack(ItemStack itemStack) {
+            if (itemStack.isEmpty()) {
+                return null;
+            }
+            JsonObject obj = new JsonObject();
+            Item item = itemStack.getItem();
+            String name = item.toString();
+            int count = itemStack.getCount();
+            obj.addProperty("count", count);
+            obj.addProperty("name", name);
+            obj.addProperty("damage", itemStack.getDamageValue());
+            if (itemStack.getEquipmentSlot() != null ) {
+                obj.addProperty("equip_slot_name", itemStack.getEquipmentSlot().getName());
+                obj.addProperty("equip_slot_type", itemStack.getEquipmentSlot().getType().toString());
+            }
+            obj.addProperty("edible", itemStack.isEdible());
+            return obj;
+        }
+
         public static String build_prompt_request_body(Brain<NPCVillagerEntity> brain,
                                                       NPCVillagerEntity contextEntity) {
             Optional<List<LivingEntity>> optional_livingentities =
@@ -283,6 +305,28 @@ public class Utils {
             if (optional_golem_protecting.isPresent()) {
                 req.addProperty("golem_protection", optional_golem_protecting.get());
             }
+
+            JsonArray inventorySlots = new JsonArray();
+            if (!contextEntity.getInventory().isEmpty()) {
+                for (int i = 0; i < contextEntity.getInventory().getContainerSize(); i++) {
+                    ItemStack itemStack = contextEntity.getInventory().getItem(i);
+                    if (!itemStack.isEmpty()) {
+                        inventorySlots.add(build_item_stack(itemStack));
+                    }
+                }
+            }
+
+            req.add("inventory", inventorySlots);
+
+            ItemStack mainHand = contextEntity.getItemBySlot(EquipmentSlotType.MAINHAND);
+            req.add("main_hand", build_item_stack(mainHand));
+            req.add("off_hand", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.OFFHAND)));
+            req.add("feet", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.FEET)));
+            req.add("legs", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.LEGS)));
+            req.add("chest", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.CHEST)));
+            req.add("head", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.HEAD)));
+
+
             return g.toJson(req);
         }
 

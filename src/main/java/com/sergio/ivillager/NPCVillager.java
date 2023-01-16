@@ -24,9 +24,7 @@ import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.SpawnEggItem;
+import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -235,6 +233,163 @@ public class NPCVillager extends NPCModElement.ModElement {
                                                          NPCVillagerEntity f0) {
         f0.getLookControl().setLookAt(player.position());
         processActionAndTag(originalMsg, f0);
+        respondToPotentialActionResponse(originalMsg, player, f0);
+    }
+
+    private static void respondToPotentialActionResponse(String originalMsg, ServerPlayerEntity toEntity, NPCVillagerEntity f0) {
+        Pattern pattern1 = Pattern.compile("\\((.*?)\\)");
+
+        Matcher macher = pattern1.matcher(originalMsg);
+        while (macher.find()) {
+            String action = macher.group(1).toLowerCase();
+            Vector3d villagerPos = f0.position();
+            Vector3d playerPos = toEntity.position();
+            Vector3d playerToVillager = villagerPos.subtract(playerPos);
+            double distance = playerToVillager.length();
+            switch (action) {
+                case "friendly pat":
+                    f0.waveHands(Hand.MAIN_HAND, false);
+                    break;
+                case "wave hand":
+                case "wave hands":
+                    f0.waveHands(Hand.MAIN_HAND, false);
+                    f0.waveHands(Hand.OFF_HAND, false);
+                    break;
+                case "punch":
+                case "beat":
+                    f0.waveHands(Hand.MAIN_HAND,true);
+                    f0.getLookControl().setLookAt(toEntity
+                            .position()
+                            .add(0.0f, 1.0f, 0.0f));
+                    if (distance <= 6.0f) {
+                        toEntity.hurt(DamageSource.mobAttack(f0), 0.5f);  // server side effects
+                    }
+                    break;
+            }
+            if (action.startsWith("equip")) {
+                String target = action.replace("equip", "").trim();
+                List<Class<?>> clses = new ArrayList<>();
+                switch (target) {
+                    case "weapon":
+                        clses.add(AxeItem.class);
+                        clses.add(SwordItem.class);
+                        break;
+                    case "armor":
+                        clses.add(ArmorItem.class);
+                        break;
+                    case "sword":
+                        clses.add(SwordItem.class);
+                        break;
+                    case "axe":
+                        clses.add(AxeItem.class);
+                        break;
+                }
+                if (!f0.getInventory().isEmpty()) {
+                    if (!clses.isEmpty()) {
+                        for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                            ItemStack itemStack = f0.getInventory().getItem(i);
+                            if (!itemStack.isEmpty()) {
+                                boolean equipped = false;
+                                Item item = itemStack.getItem();
+                                for (Class<?> cls : clses) {
+                                    if (cls.isInstance(item)) {
+                                        f0.equipItemIfPossible(itemStack);
+                                        equipped = true;
+                                        break;
+                                    }
+                                }
+                                if (equipped) {
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // maybe equip diamond_sword
+                        for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                            ItemStack itemStack = f0.getInventory().getItem(i);
+                            if (!itemStack.isEmpty()) {
+                                Item item = itemStack.getItem();
+                                if (item.toString().contains(target)) {
+                                    f0.equipItemIfPossible(itemStack);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (action.startsWith("attack with")) {
+                String target = action.replace("attack with", "").trim();
+                f0.waveHands(Hand.MAIN_HAND,true);
+                f0.getLookControl().setLookAt(toEntity
+                        .position()
+                        .add(0.0f, 1.0f, 0.0f));
+                if (distance <= 6.0f) {
+                    boolean didDamage = false;
+                    // get sword
+                    for (ItemStack itemStack : f0.getHandSlots() ){
+                        if (itemStack.isEmpty()) {
+                            continue;
+                        }
+                        Item item = itemStack.getItem();
+                        float damage = 0f;
+                        if (item instanceof SwordItem) {
+                            damage = ((SwordItem) itemStack.getItem()).getDamage();
+                            toEntity.hurt(DamageSource.mobAttack(f0), damage);
+                        } else if (item instanceof ToolItem) {
+                            damage = ((ToolItem) item).getAttackDamage();
+                        }
+                        if (damage > 0) {
+                            didDamage = true;
+                            toEntity.hurt(DamageSource.mobAttack(f0), damage);
+                            break;
+                        }
+                    }
+                    if (!didDamage) {
+                        toEntity.hurt(DamageSource.mobAttack(f0), 0.5f);
+                    }
+                }
+            }
+
+
+            if (action.startsWith("eat")) {
+                String target = action.replace("eat", "").trim();
+                if (!f0.getInventory().isEmpty()) {
+                    // maybe equip diamond_sword
+                    for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                        ItemStack itemStack = f0.getInventory().getItem(i);
+                        if (!itemStack.isEmpty()) {
+                            Item item = itemStack.getItem();
+                            if (item.isEdible() && item.toString().contains(target)) {
+                                f0.playEatSound(itemStack);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (action.startsWith("give away") || action.startsWith("give")) {
+                String target = action.replace("give away", "").trim().replace("give", "").trim();
+                if (!f0.getInventory().isEmpty()) {
+                    // maybe equip diamond_sword
+                    for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                        ItemStack itemStack = f0.getInventory().getItem(i);
+                        if (!itemStack.isEmpty()) {
+                            Item item = itemStack.getItem();
+                            if (item.toString().contains(target)) {
+                                f0.getInventory().removeItem(i, 1);
+                                ItemStack giveaway = itemStack.copy();
+                                giveaway.setCount(1);
+                                toEntity.inventory.add(giveaway);
+                                f0.playTalkSound();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static void respondToPotentialActionResponse(NPCVillagerEntity listeningVillager,
@@ -253,9 +408,17 @@ public class NPCVillager extends NPCModElement.ModElement {
         Matcher macher = pattern1.matcher(originalMsg);
         actionVillager.setCustomTag("");
         if (macher.find()) {
-            String action = macher.group(1);
+            String action = macher.group(1).toLowerCase();
             if (Config.ActionToEmoji.containsKey(action)) {
                 actionVillager.setCustomTag(Config.ActionToEmoji.get(action));
+            }
+            switch (action) {
+                case "jump":
+                    actionVillager.getJumpControl().jump();
+                    break;
+                case "run away":
+                    actionVillager.setWalkingControlForceTrigger(true);
+                    break;
             }
         }
 
@@ -580,6 +743,11 @@ public class NPCVillager extends NPCModElement.ModElement {
 
         public void playTalkSound() {
             this.playSound(Utils.RandomAmbientSound.generateSound(), this.getSoundVolume(),
+                    this.getVoicePitch());
+        }
+
+        public void playEatSound(ItemStack itemStack) {
+            this.playSound(this.getEatingSound(itemStack), this.getSoundVolume(),
                     this.getVoicePitch());
         }
 

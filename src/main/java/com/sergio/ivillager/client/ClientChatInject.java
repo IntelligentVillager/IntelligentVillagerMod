@@ -5,25 +5,30 @@ import com.google.gson.JsonObject;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
 import com.sergio.ivillager.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.*;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.*;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Mod.EventBusSubscriber
@@ -175,26 +180,204 @@ public class ClientChatInject {
     }
 
     private static void respondToPotentialActionResponse(String originalMsg, Entity toEntity, NPCVillagerEntity f0) {
-        Pattern pattern = Pattern.compile("\\(.*\\)");
-        boolean hasParentheses = pattern.matcher(originalMsg).find();
+        Pattern pattern1 = Pattern.compile("\\((.*?)\\)");
 
-        if (hasParentheses) {
-            if (originalMsg.contains("(friendly pat)")) {
-                f0.waveHands(Hand.MAIN_HAND, false);
+        Matcher macher = pattern1.matcher(originalMsg);
+        while (macher.find()) {
+            String action = macher.group(1).toLowerCase();
+            Vector3d villagerPos = f0.position();
+            Vector3d playerPos = toEntity.position();
+            Vector3d playerToVillager = villagerPos.subtract(playerPos);
+            double distance = playerToVillager.length();
+            switch (action) {
+                case "friendly pat":
+                    f0.waveHands(Hand.MAIN_HAND, false);
+                    break;
+                case "wave hand":
+                case "wave hands":
+                    f0.waveHands(Hand.MAIN_HAND, false);
+                    f0.waveHands(Hand.OFF_HAND, false);
+                    break;
+                case "punch":
+                case "beat":
+                    f0.waveHands(Hand.MAIN_HAND,true);
+                    f0.getLookControl().setLookAt(toEntity
+                            .position()
+                            .add(0.0f, 1.0f, 0.0f));
+                    if (distance <= 6.0f) {
+                        toEntity.hurt(DamageSource.mobAttack(f0), 0.5f);  // server side effects
+                    }
+                    break;
             }
-
-            if (originalMsg.contains("(wave hands)") || originalMsg.contains("(wave hand)")) {
-                f0.waveHands(Hand.MAIN_HAND, false);
-                f0.waveHands(Hand.OFF_HAND, false);
+            if (action.startsWith("equip")) {
+                String target = action.replace("equip", "").trim();
+                List<Class<?>> clses = new ArrayList<>();
+                switch (target) {
+                    case "weapon":
+                        clses.add(AxeItem.class);
+                        clses.add(SwordItem.class);
+                        break;
+                    case "armor":
+                        clses.add(ArmorItem.class);
+                        break;
+                    case "sword":
+                        clses.add(SwordItem.class);
+                        break;
+                    case "axe":
+                        clses.add(AxeItem.class);
+                        break;
+                }
+                if (!f0.getInventory().isEmpty()) {
+                    if (!clses.isEmpty()) {
+                        for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                            ItemStack itemStack = f0.getInventory().getItem(i);
+                            if (!itemStack.isEmpty()) {
+                                boolean equipped = false;
+                                Item item = itemStack.getItem();
+                                for (Class<?> cls : clses) {
+                                    if (cls.isInstance(item)) {
+                                        f0.equipItemIfPossible(itemStack);
+                                        equipped = true;
+                                        break;
+                                    }
+                                }
+                                if (equipped) {
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // maybe equip diamond_sword
+                        for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                            ItemStack itemStack = f0.getInventory().getItem(i);
+                            if (!itemStack.isEmpty()) {
+                                Item item = itemStack.getItem();
+                                if (item.toString().contains(target)) {
+                                    f0.equipItemIfPossible(itemStack);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-
-            if (originalMsg.contains("(punch)") || originalMsg.contains("(beat)")) {
+            if (action.startsWith("attack with")) {
+                String target = action.replace("attack with", "").trim();
                 f0.waveHands(Hand.MAIN_HAND,true);
-                DamageSource d0 = new EntityDamageSource("mob", f0);
-                toEntity.hurt(d0, 0.5f);
+                f0.getLookControl().setLookAt(toEntity
+                        .position()
+                        .add(0.0f, 1.0f, 0.0f));
+                if (distance <= 6.0f) {
+                    boolean didDamage = false;
+                    // get sword
+                    for (ItemStack itemStack : f0.getHandSlots() ){
+                        if (itemStack.isEmpty()) {
+                            continue;
+                        }
+                        Item item = itemStack.getItem();
+                        float damage = 0f;
+                        if (item instanceof SwordItem) {
+                            damage = ((SwordItem) itemStack.getItem()).getDamage();
+                            toEntity.hurt(DamageSource.mobAttack(f0), damage);
+                        } else if (item instanceof ToolItem) {
+                            damage = ((ToolItem) item).getAttackDamage();
+                        }
+                        if (damage > 0) {
+                            didDamage = true;
+                            toEntity.hurt(DamageSource.mobAttack(f0), damage);
+                            break;
+                        }
+                    }
+                    if (!didDamage) {
+                        toEntity.hurt(DamageSource.mobAttack(f0), 0.5f);
+                    }
+                }
+            }
+
+
+            if (action.startsWith("eat")) {
+                String target = action.replace("eat", "").trim();
+                if (!f0.getInventory().isEmpty()) {
+                    // maybe equip diamond_sword
+                    for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                        ItemStack itemStack = f0.getInventory().getItem(i);
+                        if (!itemStack.isEmpty()) {
+                            Item item = itemStack.getItem();
+                            if (item.isEdible() && item.toString().contains(target)) {
+                                f0.equipItemIfPossible(itemStack);
+                                f0.playEatSound(itemStack);
+                                f0.eatAndDigestFood();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (action.startsWith("give away") || action.startsWith("give")) {
+                String target = action.replace("give away", "").trim().replace("give", "").trim();
+                if (!f0.getInventory().isEmpty()) {
+                    // maybe equip diamond_sword
+                    for (int i = 0; i < f0.getInventory().getContainerSize(); i++) {
+                        ItemStack itemStack = f0.getInventory().getItem(i);
+                        if (!itemStack.isEmpty()) {
+                            Item item = itemStack.getItem();
+                            if (item.toString().contains(target)) {
+                                f0.getInventory().removeItem(i, 1);
+                                ItemStack giveaway = itemStack.copy();
+                                giveaway.setCount(1);
+                                toEntity.setItemSlot(EquipmentSlotType.MAINHAND, giveaway);
+//                                toEntity.inventory.add(giveaway);
+                                f0.playTalkSound();
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+
+//    private static void respondToPotentialActionResponse(String originalMsg, Entity toEntity, NPCVillagerEntity f0) {
+//        Pattern pattern = Pattern.compile("\\(.*\\)");
+//        boolean hasParentheses = pattern.matcher(originalMsg).find();
+//        f0.waveHands(Hand.MAIN_HAND, false);
+//        f0.waveHands(Hand.OFF_HAND, false);
+//        if (toEntity instanceof PlayerEntity) {
+//            PlayerEntity player = (PlayerEntity) toEntity;
+//            MinecraftServer server = player.getServer();
+//            if (server != null) {
+//                ServerPlayerEntity sp = server.getPlayerList().getPlayer(player.getUUID());
+//                sp.hurt(DamageSource.mobAttack(f0), 10.5f);
+//            }
+//            for (ItemStack item : f0.getHandSlots()) {
+//                if (!item.isEmpty()) {
+//                    f0.getItemInHand(Hand.MAIN_HAND)
+//                }
+//            }
+//            f0.getInventory().getItem(0).use(toEntity.getCommandSenderWorld(), player, Hand.MAIN_HAND);
+//            player.hurt(DamageSource.mobAttack(f0), 0.5f);
+//        }
+//        if (hasParentheses) {
+//            if (originalMsg.contains("(friendly pat)")) {
+//                f0.waveHands(Hand.MAIN_HAND, false);
+//                DamageSource d0 = new EntityDamageSource("mob", f0);
+//                toEntity.hurt(d0, 0.5f);  }
+//
+//            if (originalMsg.contains("(wave hands)") || originalMsg.contains("(wave hand)")) {
+//                f0.waveHands(Hand.MAIN_HAND, false);
+//                f0.waveHands(Hand.OFF_HAND, false);
+//                DamageSource d0 = new EntityDamageSource("mob", f0);
+//                toEntity.hurt(d0, 0.5f);
+//            }
+//
+//            if (originalMsg.contains("(punch)") || originalMsg.contains("(beat)")) {
+//                f0.waveHands(Hand.MAIN_HAND,true);
+//                DamageSource d0 = new EntityDamageSource("mob", f0);
+//                toEntity.hurt(d0, 0.5f);
+//            }
+//        }
+//    }
 
     @OnlyIn(Dist.CLIENT)
     private static boolean abandonMessageOutsideRange (ClientChatReceivedEvent event,
