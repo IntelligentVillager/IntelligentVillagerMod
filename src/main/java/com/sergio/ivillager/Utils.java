@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.NPCVillager.NPCVillagerEntity;
+import com.sergio.ivillager.config.Config;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.memory.MemoryModuleType;
@@ -64,15 +65,29 @@ public class Utils {
     }
     public static String nodeConfigBuilder(String name, String prompt) {
         String p0 = prompt.replaceAll("[^\\x20-\\x7E]", "");
-        String s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
-                "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
-                "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
-                "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
-                "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
-                "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
-                "\"text\": \"$(text)\",\"mode\": \"default\"," +
-                "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
-                " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+        String s0 = "";
+        if (Objects.equals(Config.ENV.get().toLowerCase(), "prod")) {
+            s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
+                    "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
+                    "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
+                    "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
+                    "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
+                    "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
+                    "\"text\": \"$(text)\",\"mode\": \"default\"," +
+                    "\"model_language\": 2,\"model_name\": \"GPT3\",\"node_name\": \"$(node_name)\",\"text\":" +
+                    " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+        } else {
+            s0 = "{\"node_config_id\": 111588, \"models\": [{\"model_id\": 111611,\"default_chat\": " +
+                    "{\"default_node\": \"%s\",\"default_node_text\": \"Hey there! What's up!\"," +
+                    "\"default_user\": \"user\",\"default_user_text\": \"Hey\"},\"prompts\": " +
+                    "[\"%s\"],\"rounds\": 3,\"params\": {\"background\": \"$(background)\"," +
+                    "\"default_chat\": \"$(default_chat)\",\"history_dialogue\": \"$" +
+                    "(history_dialogue)\",\"engines\": \"text-davinci-002\",\"max_tokens\": 50," +
+                    "\"text\": \"$(text)\",\"mode\": \"default\"," +
+                    "\"model_language\": 2,\"model_name\": \"BLOOM\", \"url\": \"http://8.212.45.202:8033/generate_more_results\",\"node_name\": \"$(node_name)\",\"text\":" +
+                    " \"$(text)\",\"user_name\": \"$(user_name)\"}}]}";
+        }
+
 
         String s1 = String.format(s0, name, "");
         JsonObject bodyMap = JsonConverter.encodeStringToJson(s1);

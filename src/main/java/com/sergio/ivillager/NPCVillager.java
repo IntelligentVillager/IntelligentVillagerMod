@@ -8,6 +8,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.serialization.Dynamic;
 import com.sergio.ivillager.config.Config;
 import com.sergio.ivillager.goal.NPCVillagerLookRandomlyGoal;
+import com.sergio.ivillager.goal.NPCVillagerRandomChatGoal;
 import com.sergio.ivillager.goal.NPCVillagerTalkGoal;
 import com.sergio.ivillager.goal.NPCVillagerWalkingGoal;
 import net.minecraft.command.CommandSource;
@@ -570,7 +571,9 @@ public class NPCVillager extends NPCModElement.ModElement {
             this.goalSelector.addGoal(2, new NPCVillagerTalkGoal(this));
             this.goalSelector.addGoal(1, new NPCVillagerLookRandomlyGoal(this));
             this.goalSelector.addGoal(6, new NPCVillagerWalkingGoal(this, 1.0f));
-//            this.goalSelector.addGoal(3, new NPCVillagerRandomChatGoal(this, 1.0f));
+            if (Config.ENABLE_VILLAGER_RANDOM_CHAT.get()) {
+                this.goalSelector.addGoal(3, new NPCVillagerRandomChatGoal(this, 1.0f));
+            }
         }
 
         // FINISHED: Play sound when villager talk

@@ -31,6 +31,9 @@ public class Config {
 
     public static Map<String, String> ActionToEmoji;
 
+    public static ForgeConfigSpec.ConfigValue<Boolean> ENABLE_VILLAGER_RANDOM_CHAT;
+    public static ForgeConfigSpec.ConfigValue<String> ENV;
+
     static {
         ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
         COMMON_BUILDER.comment("General settings").push("general");
@@ -51,6 +54,10 @@ public class Config {
         defaultEmoji.add("cry=😂");
         ACTION_TO_EMOJI =
                 COMMON_BUILDER.comment("Action to emoji mapping").define("ACTION_TO_EMOJI", defaultEmoji);
+
+
+        ENABLE_VILLAGER_RANDOM_CHAT = COMMON_BUILDER.comment("Whether villagers can chat with each other").define("ENABLE_VILLAGER_RANDOM_CHAT", false);
+        ENV = COMMON_BUILDER.comment("Service runtime environment, optional: dev, prod").define("ENV", "dev");
 
         COMMON_BUILDER.pop();
         COMMON_CONFIG = COMMON_BUILDER.build();
