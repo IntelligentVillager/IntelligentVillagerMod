@@ -378,11 +378,12 @@ public class NPCVillager extends NPCModElement.ModElement {
                         if (!itemStack.isEmpty()) {
                             Item item = itemStack.getItem();
                             if (item.toString().contains(target)) {
-                                f0.getInventory().removeItem(i, 1);
-                                ItemStack giveaway = itemStack.copy();
-                                giveaway.setCount(1);
-                                toEntity.inventory.add(giveaway);
-                                f0.playTalkSound();
+                                ItemStack targetItem = f0.getInventory().removeItem(i, 1);
+                                if (!targetItem.isEmpty()) {
+                                    f0.waveHands(Hand.MAIN_HAND, false);
+                                    toEntity.inventory.add(targetItem);
+                                    f0.playTalkSound();
+                                }
                                 break;
                             }
                         }
@@ -971,43 +972,106 @@ public class NPCVillager extends NPCModElement.ModElement {
                 return;
             }
 
-            String req = Utils.ContextBuilder.build_prompt_request_body(this.getBrain(), this);
-
-            NetworkRequestManager.buildPrompt(req, prompt -> {
-
-                if (Objects.equals(prompt, "")) {
-                    LOGGER.warn("get empty prompt from server");
-                    // backup
-                    prompt = Utils.ContextBuilder.build(this.getBrain(), this);
+            this.asyncRefreshIntelligenceV1(response -> {
+                if (response != null) {
+                    this.setCustomContext(response.get("prompt"));
                 }
-
-                this.setCustomContext(prompt);
-
-                String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
-                if ((ssotoken == null) || ssotoken.equals("")) {
-                    return;
-                }
-
-                NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
-                        this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
-                                , this.getCustomContext()), response -> {});
             });
+
+//            String req = Utils.ContextBuilder.build_prompt_request_body(this.getBrain(), this);
+//
+//            NetworkRequestManager.buildPrompt(req, prompt -> {
+//
+//                if (Objects.equals(prompt, "")) {
+//                    LOGGER.warn("get empty prompt from server");
+//                    // backup
+//                    prompt = Utils.ContextBuilder.build(this.getBrain(), this);
+//                }
+//
+//                this.setCustomContext(prompt);
+//
+//                String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
+//                if ((ssotoken == null) || ssotoken.equals("")) {
+//                    return;
+//                }
+//
+//                NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
+//                        this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
+//                                , this.getCustomContext()), response -> {});
+//            });
 
         }
 
+        public void asyncRefreshIntelligenceV1(Consumer<Map<String, String>> callback) {
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
+                    if ((ssotoken == null) || ssotoken.equals("")) {
+                        LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +
+                                " CONFIG FILE " +
+                                "UNDER MINECRAFT FOLDER TO INITIATE INTELLIGENTVILLAGER MOD!");
+                        return null;
+                    }
+
+                    String req = Utils.ContextBuilder.build_prompt_request_body(this.getBrain(), this);
+
+                    Map<String, String> result = NetworkRequestManager.refreshIntelligence(req, ssotoken);
+
+                    if (result.containsKey("msg") && result.get("msg").equals("success")) {
+                        return result;
+                    }
+
+                    return null;
+                } catch (Exception e) {
+                    LOGGER.error(e);
+                    e.printStackTrace();
+                    return null;
+                }
+            },NetworkRequestManager.executor).thenAccept(callback);
+        }
+
         public void generateIntelligence() {
-            this.asyncGenerateIntelligence(response -> {
+            this.asyncGenerateIntelligenceV1(response -> {
                 if (response != null) {
-                    this.setCustomName(new StringTextComponent(response.get("s_name")));
-                    this.setCustomNodeId(response.get("s_nodeId"));
-                    this.setCustomNodePublicId(response.get("s_nodePublicId"));
-                    this.setCustomBackgroundInfo(response.get("s_background"));
+                    this.setCustomName(new StringTextComponent(response.get("name")));
+                    this.setCustomNodeId(response.get("node_id"));
+                    this.setCustomNodePublicId(response.get("public_id"));
+                    this.setCustomBackgroundInfo(response.get("background"));
                     this.setHasAwaken(true);
                 } else {
                     // Generate failed
                     this.remove();
                 }
             });
+        }
+
+        public void asyncGenerateIntelligenceV1(Consumer<Map<String, String>> callback) {
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
+                    if ((ssotoken == null) || ssotoken.equals("")) {
+                        LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +
+                                " CONFIG FILE " +
+                                "UNDER MINECRAFT FOLDER TO INITIATE INTELLIGENTVILLAGER MOD!");
+                        return null;
+                    }
+
+                    String customVillagename = this.getCustomVillagename();
+                    String customProfession = this.getCustomProfession();
+                    String openAIKey = Config.OPENAI_API_KEY.get();
+                    Map<String, String> result = NetworkRequestManager.generateIntelligence(customVillagename, customProfession, openAIKey, ssotoken);
+
+                    if (result.containsKey("msg") && result.get("msg").equals("success")) {
+                        return result;
+                    }
+
+                    return null;
+                } catch (Exception e) {
+                    LOGGER.error(e);
+                    e.printStackTrace();
+                    return null;
+                }
+            },NetworkRequestManager.executor).thenAccept(callback);
         }
 
         public void asyncGenerateIntelligence(Consumer<Map<String, String>> callback) {

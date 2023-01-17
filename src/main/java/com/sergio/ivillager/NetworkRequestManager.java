@@ -1,5 +1,6 @@
 package com.sergio.ivillager;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.sergio.ivillager.Utils.JsonConverter;
 import com.sergio.ivillager.config.Config;
@@ -84,6 +85,69 @@ public class NetworkRequestManager {
             LOGGER.error(e);
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public static Map<String, String> generateIntelligence(String villageName, String profession, String openAIKey, String ssoToken) {
+        Map<String, String> result = new HashMap<>();
+        try {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("x-sso-token", ssoToken);
+
+            JsonObject body = new JsonObject();
+            Gson gson = new Gson();
+            body.addProperty("village_name", villageName);
+            body.addProperty("profession", profession);
+            body.addProperty("openai_key", openAIKey);
+
+            String resultStr =
+                    NetworkRequestManager.sendPostRequestWithHeader(URLs.GENERATE_INTELLIGENCE_URL.getUrl()
+                            , headers, gson.toJson(body));
+            JsonObject resultJson =
+                    JsonConverter.encodeStringToJson(resultStr);
+            int code = resultJson.get("code").getAsInt();
+            if (code == 0) {
+                result.put("msg", "success");
+                result.put("name", resultJson.get("name").getAsString());
+                result.put("public_id", resultJson.get("public_id").getAsString());
+                result.put("background", resultJson.get("background").getAsString());
+                result.put("node_id", resultJson.get("node_id").getAsString());
+            } else {
+                result.put("msg", "error");
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(e);
+            e.printStackTrace();
+            result.put("msg", "error");
+            return result;
+        }
+    }
+
+    public static Map<String, String> refreshIntelligence(String req, String ssoToken) {
+        Map<String, String> result = new HashMap<>();
+        try {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("x-sso-token", ssoToken);
+
+            String resultStr =
+                    NetworkRequestManager.sendPostRequestWithHeader(URLs.REFRESH_INTELLIGENCE_URL.getUrl()
+                            , headers, req);
+            JsonObject resultJson =
+                    JsonConverter.encodeStringToJson(resultStr);
+            int code = resultJson.get("code").getAsInt();
+            if (code == 0) {
+                result.put("msg", "success");
+                result.put("prompt", resultJson.get("prompt").getAsString());
+            } else {
+                result.put("msg", "error");
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(e);
+            e.printStackTrace();
+            result.put("msg", "error");
+            return result;
         }
     }
 
@@ -571,6 +635,8 @@ public class NetworkRequestManager {
         ACCESSTOKEN_URL("https://socrates-api.rct.ai/v1/applications/95878/subusers"),
         CREATE_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/full"),
         SET_NODE_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/node_config"),
+        GENERATE_INTELLIGENCE_URL("https://socrates-api.rct.ai/v11/generate_intelligence"),
+        REFRESH_INTELLIGENCE_URL("https://socrates-api.rct.ai/v11/refresh_intelligence"),
         INTERACT_URL("https://socrates-api.rct.ai/v1/applications/95878/nodes/%s/conversation" +
                 "?accessKey=%s&accessToken=%s");
 

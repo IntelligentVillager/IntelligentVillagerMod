@@ -235,6 +235,10 @@ public class Utils {
             JsonObject req = new JsonObject();
             Gson g = new Gson();
 
+            req.addProperty("name", contextEntity.getName().getString());
+            req.addProperty("node_id", contextEntity.getCustomNodeId());
+            req.addProperty("background", contextEntity.getCustomBackgroundInfo());
+
             Map<String, List<String>> livingEntities = new HashMap<>();
             if (optional_livingentities.isPresent()) {
                 List<LivingEntity> entities = optional_livingentities.get();

@@ -323,12 +323,12 @@ public class ClientChatInject {
                         if (!itemStack.isEmpty()) {
                             Item item = itemStack.getItem();
                             if (item.toString().contains(target)) {
-                                f0.getInventory().removeItem(i, 1);
-                                ItemStack giveaway = itemStack.copy();
-                                giveaway.setCount(1);
-                                toEntity.setItemSlot(EquipmentSlotType.MAINHAND, giveaway);
-//                                toEntity.inventory.add(giveaway);
-                                f0.playTalkSound();
+                                ItemStack targetItem = f0.getInventory().removeItem(i, 1);
+                                if (!targetItem.isEmpty()) {
+                                    toEntity.setItemSlot(EquipmentSlotType.MAINHAND, targetItem);
+                                    f0.waveHands(Hand.MAIN_HAND, false);
+                                    f0.playTalkSound();
+                                }
                                 break;
                             }
                         }
