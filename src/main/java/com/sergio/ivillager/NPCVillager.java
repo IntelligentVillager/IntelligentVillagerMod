@@ -977,29 +977,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                     this.setCustomContext(response.get("prompt"));
                 }
             });
-
-//            String req = Utils.ContextBuilder.build_prompt_request_body(this.getBrain(), this);
-//
-//            NetworkRequestManager.buildPrompt(req, prompt -> {
-//
-//                if (Objects.equals(prompt, "")) {
-//                    LOGGER.warn("get empty prompt from server");
-//                    // backup
-//                    prompt = Utils.ContextBuilder.build(this.getBrain(), this);
-//                }
-//
-//                this.setCustomContext(prompt);
-//
-//                String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
-//                if ((ssotoken == null) || ssotoken.equals("")) {
-//                    return;
-//                }
-//
-//                NetworkRequestManager.setNodePrompt(this.getName().getString(), ssotoken,
-//                        this.getCustomNodeId(), String.format("%s\n%s", this.getCustomBackgroundInfo()
-//                                , this.getCustomContext()), response -> {});
-//            });
-
         }
 
         public void asyncRefreshIntelligenceV1(Consumer<Map<String, String>> callback) {
@@ -1065,61 +1042,6 @@ public class NPCVillager extends NPCModElement.ModElement {
                         return result;
                     }
 
-                    return null;
-                } catch (Exception e) {
-                    LOGGER.error(e);
-                    e.printStackTrace();
-                    return null;
-                }
-            },NetworkRequestManager.executor).thenAccept(callback);
-        }
-
-        public void asyncGenerateIntelligence(Consumer<Map<String, String>> callback) {
-            CompletableFuture.supplyAsync(() -> {
-                try {
-                    String ssotoken = NPCVillagerManager.getInstance().getSsoToken();
-                    if ((ssotoken == null) || ssotoken.equals("")) {
-                        LOGGER.error("IMPORTANT! SET YOUR SOCRATES USER AUTHENTICATION IN THE" +
-                                " CONFIG FILE " +
-                                "UNDER MINECRAFT FOLDER TO INITIATE INTELLIGENTVILLAGER MOD!");
-                        return null;
-                    }
-
-                    String customVillagename = this.getCustomVillagename();
-                    String customProfession = this.getCustomProfession();
-                    String[] p0 =
-                            NetworkRequestManager.generateVillager(Config.OPENAI_API_KEY.get(),
-                                    customVillagename, customProfession);
-                    if (p0[0].equals("") || p0[1].equals("")) {
-                        LOGGER.error("[SERVER] Generate character name and background fail, check" +
-                                " error message");
-                        return null;
-                    }
-
-                    String customName = p0[0];
-                    String customBackground = p0[1];
-
-                    String[] p1 = NetworkRequestManager.createNodeId(customName, ssotoken);
-                    if (p1[0].equals("") || p1[1].equals("")) {
-                        LOGGER.error("[SERVER] Generate character node fail, check" +
-                                " error message");
-                        return null;
-                    }
-
-                    String nodePublicId = p1[0];
-                    String nodeId = p1[1];
-
-                    Boolean flag = NetworkRequestManager.setNodePrompt(customName, ssotoken,
-                            nodeId, customBackground);
-                    if (flag) {
-                        //Successfully create and set node
-                        Map<String, String> result = new HashMap<>();
-                        result.put("s_name", customName);
-                        result.put("s_background", customBackground);
-                        result.put("s_nodeId", nodeId);
-                        result.put("s_nodePublicId", nodePublicId);
-                        return result;
-                    }
                     return null;
                 } catch (Exception e) {
                     LOGGER.error(e);

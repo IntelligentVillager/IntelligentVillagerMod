@@ -105,98 +105,6 @@ public class Utils {
         return JsonConverter.decodeJsonToString(bodyMap);
     }
 
-    public static class NPCVillagerCompatriotsInterpreter {
-        public static String interpret(List<NPCVillagerEntity> entities,
-                                       NPCVillagerEntity contextEntity) {
-            StringBuilder description = new StringBuilder();
-            if (entities.size() > 0) {
-                description.append("Other villager living in ").append(contextEntity.getCustomVillagename()).append(" :");
-                for (int i = 0; i < entities.size() - 1; i++) {
-                    description.append(entities.get(i).getCustomProfession()).append(" ").append(entities.get(i).getName().getString()).append(", ");
-                }
-                description.append(entities.get(entities.size() - 1).getCustomProfession())
-                        .append(" ")
-                        .append(entities.get(entities.size() - 1).getName().getString())
-                        .append(".");
-            } else {
-                description.append("No other villagers living in ").append(contextEntity.getCustomVillagename()).append(".");
-            }
-            return description.toString();
-        }
-    }
-
-    public static class NPCVillagerLivingEntityInterpreter {
-        public static String interpret(List<LivingEntity> entities, NPCVillagerEntity contextEntity) {
-            StringBuilder description = new StringBuilder();
-            Map<String, Integer> otherCreatures = new HashMap<>();
-
-            if (entities.size() > 0) {
-                description.append("There are living creatures around: ");
-                for (int i = 0; i < entities.size(); i++) {
-                    if (entities.get(i) instanceof NPCVillagerEntity) {
-                        description.append("Villager ").append(entities.get(i).getName().getString());
-                        if (i < entities.size() - 1) description.append(",");
-                    } else if (entities.get(i) instanceof PlayerEntity) {
-                        description.append("Player ").append(entities.get(i).getName().getString());
-                        if (i < entities.size() - 1) description.append(",");
-                    } else {
-                        String s0 = entities.get(i).getName().getString();
-                        int count = otherCreatures.getOrDefault(s0, 0);
-                        otherCreatures.put(s0, count + 1);
-                    }
-                }
-                if (otherCreatures.keySet().size() > 0) {
-                    description.append(" and ");
-                    for (String creature_name : otherCreatures.keySet()) {
-                        description.append(String.valueOf(otherCreatures.get(creature_name))).append(" ").append(creature_name).append(", ");
-                    }
-                }
-                description.append("now around ")
-                        .append(contextEntity.getName().getString())
-                        .append(".");
-            } else {
-                description.append("No living creatures around ")
-                        .append(contextEntity.getName().getString())
-                        .append(".");
-            }
-            return description.toString();
-        }
-    }
-
-    public static class NPCVillagerPlayerAttackHistoryInterpreter {
-        public static String interpret(Map<String, Long> m0, NPCVillagerEntity contextEntity) {
-//            contextEntity.getServer().getPlayerList().getPlayer(UUID.fromString());
-            if (m0.isEmpty()) {
-                return contextEntity.getName().getString() + " is living peacefully with all the " +
-                        "players.";
-            } else {
-                Long current_time_stamp = System.currentTimeMillis();
-                StringBuilder description = new StringBuilder();
-                MinecraftServer s1 = contextEntity.getServer();
-                if (s1 == null) {
-                    return contextEntity.getName().getString() + " is living peacefully with all the " +
-                            "players.";
-                }
-                for (String uuid : m0.keySet()) {
-                    long delta = current_time_stamp - m0.get(uuid);
-                    if (delta < 600000) {
-                        ServerPlayerEntity p0 = s1.getPlayerList().getPlayer(UUID.fromString(uuid));
-                        if (p0 != null) {
-                            description.append("Player ")
-                                    .append(p0.getName().getString())
-                                    .append(" has hurt ")
-                                    .append(contextEntity.getName().getString())
-                                    .append(" ")
-                                    .append(delta / 60000)
-                                    .append(" minute ago.");
-                        }
-                    }
-                }
-                return description.toString();
-            }
-        }
-    }
-
     public static class ContextBuilder {
 
         public static JsonObject build_item_stack(ItemStack itemStack) {
@@ -210,7 +118,7 @@ public class Utils {
             obj.addProperty("count", count);
             obj.addProperty("name", name);
             obj.addProperty("damage", itemStack.getDamageValue());
-            if (itemStack.getEquipmentSlot() != null ) {
+            if (itemStack.getEquipmentSlot() != null) {
                 obj.addProperty("equip_slot_name", itemStack.getEquipmentSlot().getName());
                 obj.addProperty("equip_slot_type", itemStack.getEquipmentSlot().getType().toString());
             }
@@ -219,7 +127,7 @@ public class Utils {
         }
 
         public static String build_prompt_request_body(Brain<NPCVillagerEntity> brain,
-                                                      NPCVillagerEntity contextEntity) {
+                                                       NPCVillagerEntity contextEntity) {
             Optional<List<LivingEntity>> optional_livingentities =
                     brain.getMemory(MemoryModuleType.LIVING_ENTITIES);
             Optional<List<LivingEntity>> optional_livingentities_visible =
@@ -333,75 +241,6 @@ public class Utils {
 
             return g.toJson(req);
         }
-
-        public static String build(Brain<NPCVillagerEntity> brain,
-                                   NPCVillagerEntity contextEntity) {
-
-            StringBuilder description = new StringBuilder();
-            Optional<List<LivingEntity>> optional_livingentities =
-                    brain.getMemory(MemoryModuleType.LIVING_ENTITIES);
-            Optional<List<LivingEntity>> optional_livingentities_visible =
-                    brain.getMemory(MemoryModuleType.VISIBLE_LIVING_ENTITIES);
-            Optional<List<NPCVillagerEntity>> optional_villagers_in_town =
-                    brain.getMemory(NPCVillagerMod.COMPATRIOTS_MEMORY_TYPE);
-            Optional<Map<String, Long>> optional_player_attack_history =
-                    brain.getMemory(NPCVillagerMod.PLAYER_ATTACK_HISTORY);
-            Optional<String> optional_weather_memory =
-                    brain.getMemory(NPCVillagerMod.WEATHER_MEMORY);
-            Optional<String> optional_golem_protecting =
-                    brain.getMemory(NPCVillagerMod.GOLEM_PROTECTING_MEMORY);
-
-            if (optional_livingentities.isPresent()) {
-                List<LivingEntity> l0 = optional_livingentities.get();
-                description.append(NPCVillagerLivingEntityInterpreter.interpret(l0,
-                        contextEntity)).append("\n");
-            }
-
-            if (optional_villagers_in_town.isPresent()) {
-                List<NPCVillagerEntity> l1 = optional_villagers_in_town.get();
-                description.append(NPCVillagerCompatriotsInterpreter.interpret(l1, contextEntity)).append("\n");
-            }
-
-            if (optional_player_attack_history.isPresent()) {
-                Map<String, Long> m0 = optional_player_attack_history.get();
-                description.append(NPCVillagerPlayerAttackHistoryInterpreter.interpret(m0,
-                        contextEntity)).append("\n");
-            }
-
-            optional_weather_memory.ifPresent(description::append);
-            optional_golem_protecting.ifPresent(description::append);
-
-            description.append("\nSecond, there is a dialogue between ")
-                    .append(contextEntity.getName().getString())
-                    .append("and user. ")
-                    .append(contextEntity.getName().getString())
-                    .append(" should utter a sentence followed by an action wrapped by a pair of parentheses.\n" +
-                            "action:wave hands#walk forward#walk backward#run " +
-                            "away#jump#think#friendly pat#punch\n" +
-                            "Third, dialogue: \n" +
-                            "user: (jump) Hey!\n")
-                    .append(contextEntity.getName().getString())
-                    .append(": (wave hands) Hey! What's up?\n");
-            return description.toString();
-        }
-    }
-
-    public static class RandomNameGenerator {
-
-        private static final String[] FIRST_NAMES = {
-                "Alice", "Bob", "Charlie", "Dave", "Eve", "Frank", "Gina", "Harry", "Ivy", "Jack", "Kate", "Linda", "Mike", "Nina", "Oscar", "Peggy", "Quincy", "Rita", "Sam", "Tina", "Ursula", "Violet", "Wendy", "Xander", "Yolanda", "Zach"
-        };
-
-        private static final String[] LAST_NAMES = {
-                "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Martinez", "Robinson", "Clark", "Rodriguez", "Lewis", "Lee", "Walker", "Hall", "Allen", "Young", "King", "Wright", "Scott", "Green", "Baker", "Adams", "Nelson", "Carter", "Mitchell", "Perez", "Roberts", "Turner", "Phillips", "Campbell", "Parker", "Evans", "Edwards", "Collins", "Stewart", "Sanchez", "Morris", "Rogers", "Reed", "Cook", "Morgan", "Bell", "Murphy", "Bailey", "Rivera", "Cooper", "Richardson", "Cox", "Howard", "Ward", "Torres", "Peterson", "Gray", "Ramirez", "James", "Watson", "Brooks", "Kelly", "Sanders", "Price", "Bennett", "Wood", "Barnes", "Ross", "Henderson", "Coleman", "Jenkins", "Perry", "Powell", "Long", "Patterson", "Hughes", "Flores", "Washington", "Butler", "Simmons", "Foster", "Gonzales", "Bryant", "Alexander", "Russell", "Griffin", "Diaz", "Hayes"
-        };
-
-        public static String generateName() {
-            Random random = new Random();
-            int firstIndex = random.nextInt(FIRST_NAMES.length);
-            int lastIndex = random.nextInt(LAST_NAMES.length);
-            return FIRST_NAMES[firstIndex] + " " + LAST_NAMES[lastIndex];
-        }
     }
 
     public static class RandomSkinGenerator {
@@ -423,7 +262,6 @@ public class Utils {
                 SoundEvents.VILLAGER_AMBIENT, SoundEvents.VILLAGER_CELEBRATE,
                 SoundEvents.VILLAGER_YES, SoundEvents.VILLAGER_NO
         };
-        ;
 
         public static SoundEvent generateSound() {
             Random rand = new Random();
