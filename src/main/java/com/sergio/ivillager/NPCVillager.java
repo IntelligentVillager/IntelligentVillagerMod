@@ -267,7 +267,7 @@ public class NPCVillager extends NPCModElement.ModElement {
                     break;
             }
             if (action.startsWith("equip")) {
-                String target = action.replace("equip", "").trim();
+                String target = action.replace("equips", "").replace("equip", "").trim();
                 List<Class<?>> clses = new ArrayList<>();
                 switch (target) {
                     case "weapon":
