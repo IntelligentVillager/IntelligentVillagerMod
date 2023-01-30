@@ -238,6 +238,21 @@ public class Utils {
             req.add("chest", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.CHEST)));
             req.add("head", build_item_stack(contextEntity.getItemBySlot(EquipmentSlotType.HEAD)));
 
+            JsonArray availableActions = new JsonArray();
+            for (String action : Config.ACTION_TO_EMOJI.get()) {
+                availableActions.add(action);
+            }
+
+            String validActions[] = new String[] {
+                    "friendly pat", "wave hand", "wave hands", "punch", "beat", "equip", "attack with", "attack",
+                    "eat", "give", "give away"
+            };
+            for (String action : validActions) {
+                availableActions.add(action);
+            }
+
+            req.add("available_actions", availableActions);
+
 
             return g.toJson(req);
         }
